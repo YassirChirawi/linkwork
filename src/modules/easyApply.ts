@@ -160,14 +160,92 @@ export class EasyApplyModule {
   }
 
   /**
+   * Détecte et nettoie toute modale résiduelle (confirmation d'abandon, dialogue de succès, overlay Artdeco)
+   * pour éviter que le curseur ne soit intercepté lors du clic sur les offres suivantes.
+   */
+  private async cleanLingeringModals(forceRemove: boolean = false): Promise<void> {
+    try {
+      // 1. Bouton de confirmation d'abandon si dialogue ouvert ("Ignorer", "Discard", "Abandonner", "Supprimer")
+      const discardBtns = this.page.locator(CONFIG.selectors.easyApply.confirmDiscardButton);
+      if (await discardBtns.first().isVisible({ timeout: 800 }).catch(() => false)) {
+        log.info('[CleanModal] Fermeture de la boîte de dialogue de confirmation d\'abandon...');
+        await discardBtns.first().click({ force: true }).catch(() => null);
+        await humanDelay(300, 600);
+      }
+
+      // 2. Boutons de fin / succès de candidature ("Terminé", "Done", "OK", "Fermer")
+      const doneBtns = this.page.locator(
+        'button:has-text("Terminé"), button:has-text("Done"), button:has-text("OK"), button.artdeco-modal__dismiss, button[data-test-modal-close-btn], button[aria-label*="Fermer la boîte de dialogue"], button[aria-label*="Fermer"], button[aria-label*="Dismiss"], button[aria-label*="Close"]'
+      );
+      if (await doneBtns.first().isVisible({ timeout: 800 }).catch(() => false)) {
+        log.info('[CleanModal] Fermeture de la modale active...');
+        await doneBtns.first().click({ force: true }).catch(() => null);
+        await humanDelay(300, 600);
+      }
+
+      // 3. Si un overlay bloque encore, double pression sur Échap
+      const hasOverlay = await this.page.locator('.artdeco-modal-overlay, #artdeco-modal-outlet .artdeco-modal').first().isVisible().catch(() => false);
+      if (hasOverlay) {
+        await this.page.keyboard.press('Escape');
+        await humanDelay(250, 500);
+        await this.page.keyboard.press('Escape');
+        await humanDelay(250, 500);
+      }
+
+      // 4. Si nettoyage forcé ou si l'overlay persiste, neutralisation directe par injection JS
+      if (forceRemove || await this.page.locator('.artdeco-modal-overlay, #artdeco-modal-outlet .artdeco-modal').first().isVisible().catch(() => false)) {
+        await this.page.evaluate(() => {
+          const overlays = document.querySelectorAll('.artdeco-modal-overlay, #artdeco-modal-outlet');
+          overlays.forEach((el) => {
+            (el as HTMLElement).style.display = 'none';
+            (el as HTMLElement).style.pointerEvents = 'none';
+          });
+        }).catch(() => null);
+      }
+    } catch {
+      // Ignorer les erreurs mineures lors du nettoyage
+    }
+  }
+
+  /**
+   * Clic sécurisé sur une carte d'offre avec récupération automatique contre les overlays bloquants.
+   */
+  private async safeClickJobCard(cardLocator: Locator, clickableTarget: Locator): Promise<void> {
+    const isTargetVisible = await clickableTarget.isVisible({ timeout: 1500 }).catch(() => false);
+    const target = isTargetVisible ? clickableTarget : cardLocator;
+
+    try {
+      // Tentative de clic standard réactive (max 4 secondes, jamais de blocage 20s)
+      await target.click({ timeout: 4000 });
+    } catch (err) {
+      log.warn('[AutoRecovery] Clic standard intercepté par un overlay, nettoyage forcé et réessai immédiat...');
+      await this.cleanLingeringModals(true);
+      await humanDelay(300, 600);
+
+      try {
+        // Tentative avec clic forcé
+        await target.click({ force: true, timeout: 3000 });
+      } catch {
+        // Ultime recours : clic natif dispatché via JavaScript
+        await target.evaluate((el: HTMLElement) => el.click()).catch(async () => {
+          await cardLocator.evaluate((el: HTMLElement) => el.click()).catch(() => null);
+        });
+      }
+    }
+  }
+
+  /**
    * Traite une carte d'offre individuelle.
    */
   private async processJobCard(cardLocator: Locator, index: number): Promise<'continue' | 'abort'> {
     this.stats.scanned++;
 
     try {
+      // 0. Nettoyage préventif des modales résiduelles d'offres précédentes
+      await this.cleanLingeringModals();
+
       // Défilement vers la carte pour visibilité naturelle
-      await cardLocator.scrollIntoViewIfNeeded();
+      await cardLocator.scrollIntoViewIfNeeded().catch(() => null);
       await humanDelay(400, 900);
 
       // Titre et entreprise de l'offre
@@ -214,13 +292,9 @@ export class EasyApplyModule {
         return 'continue';
       }
 
-      // Clic sur l'offre pour charger le volet de détails à droite
+      // Clic résilient sur l'offre pour charger le volet de détails à droite
       const clickableTarget = cardLocator.locator('.job-card-list__title, a.job-card-container__link, a[data-control-id]').first();
-      if (await clickableTarget.isVisible().catch(() => false)) {
-        await clickableTarget.click();
-      } else {
-        await cardLocator.click();
-      }
+      await this.safeClickJobCard(cardLocator, clickableTarget);
       await humanDelay(CONFIG.delays.actionDelay.min, CONFIG.delays.actionDelay.max);
 
       // Recherche du bouton "Candidature simplifiée" dans le volet détaillé de droite
@@ -247,11 +321,17 @@ export class EasyApplyModule {
       await applyBtn.scrollIntoViewIfNeeded().catch(() => null);
       await humanDelay(300, 700);
 
-      // Déclencher le clic avec Playwright natif pour garantir l'exécution des handlers React
+      // Déclencher le clic avec Playwright natif et gestion des overlays résiduels
       try {
         await applyBtn.click({ timeout: 5000 });
       } catch {
-        await humanMoveAndClick(this.page, applyBtn);
+        await this.cleanLingeringModals(true);
+        await humanDelay(200, 500);
+        try {
+          await applyBtn.click({ force: true, timeout: 3000 });
+        } catch {
+          await humanMoveAndClick(this.page, applyBtn);
+        }
       }
 
       // Traitement de la modale de candidature
@@ -326,11 +406,8 @@ export class EasyApplyModule {
         await humanMoveAndClick(this.page, submitBtn);
         await humanDelay(2500, 4500);
 
-        // Fermeture de la pop-up de confirmation éventuelle
-        const closeBtn = this.page.locator('button[aria-label*="Fermer"], button[aria-label*="Dismiss"]').first();
-        if (await closeBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-          await closeBtn.click();
-        }
+        // Fermeture de la pop-up de confirmation éventuelle ("Candidature envoyée", "Terminé", "OK")
+        await this.cleanLingeringModals();
 
         log.success(`Candidature envoyée avec succès pour : "${jobTitle}" !`);
         this.stats.applied++;
@@ -343,6 +420,8 @@ export class EasyApplyModule {
           status: 'SUCCESS',
         });
 
+        // Garantir un écran propre et sans overlay résiduel pour l'offre suivante
+        await this.cleanLingeringModals();
         return 'applied';
       }
 
@@ -518,16 +597,22 @@ export class EasyApplyModule {
     try {
       const dismissBtn = this.page.locator(CONFIG.selectors.easyApply.dismissButton).first();
       if (await dismissBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await dismissBtn.click();
+        await dismissBtn.click({ force: true }).catch(() => null);
         await humanDelay(500, 1000);
-
-        const confirmDiscard = this.page.locator(CONFIG.selectors.easyApply.confirmDiscardButton).first();
-        if (await confirmDiscard.isVisible({ timeout: 2000 }).catch(() => false)) {
-          await confirmDiscard.click();
-        }
+      } else {
+        await this.page.keyboard.press('Escape');
+        await humanDelay(400, 800);
       }
+
+      const confirmDiscard = this.page.locator(CONFIG.selectors.easyApply.confirmDiscardButton).first();
+      if (await confirmDiscard.isVisible({ timeout: 2000 }).catch(() => false)) {
+        await confirmDiscard.click({ force: true }).catch(() => null);
+        await humanDelay(400, 800);
+      }
+
+      await this.cleanLingeringModals();
     } catch {
-      // Ignorer si la modale était déjà fermée
+      await this.cleanLingeringModals(true);
     }
   }
 
@@ -536,11 +621,13 @@ export class EasyApplyModule {
    */
   private async goToNextPage(): Promise<boolean> {
     try {
+      await this.cleanLingeringModals();
       const nextPaginationBtn = this.page.locator('button[aria-label*="Page suivante"], button[aria-label*="Next page"]').first();
       if (await nextPaginationBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
         log.human('Passage à la page suivante de résultats...');
         await humanMoveAndClick(this.page, nextPaginationBtn);
         await humanDelay(CONFIG.delays.actionDelay.min, CONFIG.delays.actionDelay.max);
+        await this.cleanLingeringModals();
         return true;
       }
     } catch {

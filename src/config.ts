@@ -535,8 +535,8 @@ export const CONFIG: OrchestratorConfig = {
       nextButton: 'button[aria-label*="Continuer vers l\'étape suivante"], button[aria-label*="Continue to next step"], button:has-text("Suivant"), button:has-text("Next"), button.artdeco-button--primary',
       reviewButton: 'button[aria-label*="Vérifier votre candidature"], button[aria-label*="Review your application"], button:has-text("Vérifier"), button:has-text("Review")',
       submitButton: 'button[aria-label*="Envoyer la candidature"], button[aria-label*="Submit application"], button:has-text("Envoyer la candidature"), button:has-text("Submit application")',
-      dismissButton: 'button[aria-label*="Fermer"], button[aria-label*="Dismiss"], button[data-test-modal-close-btn]',
-      confirmDiscardButton: 'button[data-control-name="discard_application_confirm_btn"], button:has-text("Ignorer"), button:has-text("Discard")',
+      dismissButton: 'button.artdeco-modal__dismiss, button[data-test-modal-close-btn], button[aria-label*="Fermer la boîte de dialogue"], button[aria-label*="Fermer"], button[aria-label*="Dismiss"], button[aria-label*="Close"], button:has-text("Fermer")',
+      confirmDiscardButton: 'button[data-control-name="discard_application_confirm_btn"], button[data-test-dialog-primary-btn], button:has-text("Ignorer"), button:has-text("Discard"), button:has-text("Abandonner"), button:has-text("Ne pas enregistrer"), button:has-text("Supprimer")',
       errorMessage: '.artdeco-inline-feedback--error',
     },
     networking: {
