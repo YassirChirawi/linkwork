@@ -1,0 +1,92 @@
+================================================================================
+     NEXUS STEALTH - LINKEDIN & HELLOWORK ORCHESTRATOR (EDITION MAC)
+                 GUIDE DE DEMARRAGE RAPIDE SUR APPLE MAC
+================================================================================
+
+Bienvenue dans l'orchestrateur d'automatisation de candidatures professionnelles
+et de prospection B2B avec simulation humaine indetectable (Playwright Stealth).
+
+Ce kit est 100% compatible avec Apple Mac :
+- Apple Silicon : Mac M1, M2, M3, M4 (MacBook Air, MacBook Pro, Mac mini, iMac, Mac Studio)
+- Mac Intel (anciens modeles)
+
+--------------------------------------------------------------------------------
+ ASTUCE IMPORTANTE LORS DU PREMIER DEZIPPAGE SUR MAC
+--------------------------------------------------------------------------------
+Par mesure de securite sur macOS, les fichiers telecharges peuvent necessiter 
+l'autorisation d'execution. Si un double-clic ne se lance pas :
+1. Faites un Clic-Droit sur le fichier .command -> Choisir "Ouvrir" -> Confirmer.
+OU
+2. Ouvrez l'application "Terminal" de votre Mac, glissez le dossier dessus et tapez :
+   chmod +x *.command
+
+
+--------------------------------------------------------------------------------
+ ETAPE 0 : INSTALLATION INITIALE (A FAIRE 1 SEULE FOIS)
+--------------------------------------------------------------------------------
+1. Double-cliquez sur "0-Installation-Mac.command".
+2. Le script verifie la presence de Node.js sur votre Mac :
+   - S'il n'est pas installe, il ouvre le site officiel pour le telecharger gratuitement.
+3. Le script installe les modules necessaires et le navigateur furtif Chromium pour macOS.
+
+
+--------------------------------------------------------------------------------
+ ETAPE 1 : AJOUTEZ VOTRE PROPRE CV (AU FORMAT PDF)
+--------------------------------------------------------------------------------
+1. Ouvrez le dossier "assets/".
+2. Glissez-y simplement votre fichier de CV au format PDF (ex : "Mon_CV.pdf").
+   -> L'orchestrateur extrait vos competences, detecte votre domaine (Achats, Logistique, 
+      Marketing, Finance, RH, Tech...) et remplit les formulaires automatiquement.
+
+
+--------------------------------------------------------------------------------
+ ETAPE 2 : CONNECTEZ VOTRE COMPTE LINKEDIN (A FAIRE 1 SEULE FOIS)
+--------------------------------------------------------------------------------
+Pour que le bot puisse postuler pour vous en toute securite sans connaitre votre mot de passe :
+
+1. Pour LinkedIn :
+   -> Double-cliquez sur "1-Connexion-LinkedIn-Mac.command".
+   -> Une fenetre de navigation Chromium s'ouvre : connectez-vous a LinkedIn
+      et validez l'eventuel code SMS / 2FA.
+   -> Des que vous arrivez sur votre fil d'actualite (/feed), votre session
+      est sauvegardee en local (state.json) et la fenetre se ferme.
+
+2. Pour HelloWork (Optionnel) :
+   -> Double-cliquez sur "2-Connexion-HelloWork-Mac.command".
+   -> Connectez-vous a votre compte HelloWork.
+
+
+--------------------------------------------------------------------------------
+ ETAPE 3 : LANCEZ L'ORCHESTRATEUR ET VOS CANDIDATURES
+--------------------------------------------------------------------------------
+1. Double-cliquez sur "3-Lancer-Orchestrator-Mac.command".
+   -> Votre navigateur par defaut (Safari ou Chrome) s'ouvre automatiquement
+      sur l'adresse : http://localhost:3000
+
+2. Sur le Tableau de bord :
+   a. Onglet "Intelligence CV & Chasseur" :
+      - Cliquez sur "Analyser mon CV" pour visualiser vos mots-cles et requetes.
+      - Utilisez le "Chasseur des Meilleures Offres" pour tirer et ordonner les postes ideaux.
+   b. Onglet "Profil Candidat" :
+      - Verifiez vos coordonnees et ajoutez vos annees d'experience.
+   c. Onglet "Campagnes & Quotas" :
+      - Indiquez le poste cible et le lieu recherche.
+   d. Cliquez sur "Demarrer" pour lancer les candidatures en mode 100% automatique.
+
+
+--------------------------------------------------------------------------------
+ METHODE ALTERNATIVE (VIA LE TERMINAL MAC)
+--------------------------------------------------------------------------------
+Si vous preferez utiliser directement le Terminal :
+1. Installation : npm install && npx playwright install chromium
+2. Connexion    : npm run auth
+3. Lancement    : npm run dashboard
+
+
+--------------------------------------------------------------------------------
+ SECURITE & CONFIDENTIALITE
+--------------------------------------------------------------------------------
+* Vos identifiants ne sont JAMAIS transmis a des serveurs tiers.
+* Seuls les cookies de session temporaires sont stockes en local sur votre Mac.
+* Delais gaussiens humains et simulation anti-detection Playwright Stealth.
+================================================================================

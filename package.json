@@ -1,0 +1,57 @@
+{
+  "name": "linkedin-orchestrator",
+  "version": "1.0.0",
+  "description": "Orchestrateur modulaire d'automatisation LinkedIn avec Playwright Stealth, Easy Apply semi-auto, Networking et Outreach SaaS.",
+  "main": "electron/main.cjs",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "auth": "tsx src/auth.ts",
+    "auth:hellowork": "tsx src/auth.ts --hellowork",
+    "easy-apply": "tsx src/modules/easyApply.ts",
+    "networking": "tsx src/modules/networking.ts",
+    "outreach": "tsx src/modules/outreach.ts",
+    "hellowork": "tsx src/modules/helloWork.ts",
+    "dashboard": "tsx src/server.ts",
+    "desktop": "electron electron/main.cjs",
+    "build:exe": "electron-builder --win portable --x64",
+    "typecheck": "tsc --noEmit"
+  },
+  "build": {
+    "appId": "com.bayiin.linkedin.orchestrator",
+    "productName": "LinkedIn & BayIIn Orchestrator",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "portable"
+      ]
+    }
+  },
+  "keywords": [
+    "playwright",
+    "stealth",
+    "automation",
+    "linkedin",
+    "easy-apply",
+    "networking"
+  ],
+  "author": "Yassir Chirawi",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "dotenv": "^16.4.7",
+    "pdf-parse": "^2.4.5",
+    "playwright": "^1.50.1",
+    "playwright-extra": "^4.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.5",
+    "electron": "^44.3.0",
+    "electron-builder": "^26.15.3",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3"
+  }
+}

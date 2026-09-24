@@ -1,0 +1,27 @@
+# Dépendances & build
+node_modules/
+dist/
+
+# Données sensibles & session LinkedIn / HelloWork (JAMAIS commit)
+state.json
+hellowork_state.json
+.env
+*.pem
+*.log
+
+# Distribution packs & archives
+*.zip
+LinkedIn-Orchestrator-*/
+LinkedIn-Orchestrator-Pack/
+LinkedIn-Orchestrator-Windows/
+LinkedIn-Orchestrator-Mac/
+
+# Documents personnels & historique
+assets/*.pdf
+!assets/sample_cv.txt
+data/*.json
+
+# OS
+.DS_Store
+Thumbs.db
+

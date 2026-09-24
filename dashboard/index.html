@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexus Stealth | LinkedIn Automation & SaaS Orchestrator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Barre latérale / Navigation -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-logo">
+        <span class="logo-core"></span>
+        <span class="logo-pulse"></span>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">NEXUS</span>
+        <span class="brand-badge">STEALTH v2.4</span>
+      </div>
+    </div>
+
+    <nav class="nav-menu">
+      <button class="nav-item active" id="nav-dashboard" data-tab="dashboard">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Tableau de bord</span>
+      </button>
+      <button class="nav-item" id="nav-candidate" data-tab="candidate">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Profil Candidat</span>
+      </button>
+      <button class="nav-item" id="nav-cv-matcher" data-tab="cv-matcher">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span>Intelligence CV & Chasseur</span>
+      </button>
+      <button class="nav-item" id="nav-campaigns" data-tab="campaigns">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>Campagnes & Quotas</span>
+      </button>
+      <button class="nav-item" id="nav-saas" data-tab="saas">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        <span>Prospection BayIIn</span>
+      </button>
+      <button class="nav-item" id="nav-history" data-tab="history">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+        <span>Historique d'Actions</span>
+      </button>
+      <button class="nav-item" id="nav-logs" data-tab="logs">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+        <span>Console Live</span>
+      </button>
+    </nav>
+
+    <div class="session-card">
+      <div class="session-header">
+        <div class="session-indicator" id="session-indicator"></div>
+        <span class="session-title">Session LinkedIn</span>
+      </div>
+      <p class="session-details" id="session-info">Chargement...</p>
+      <button class="btn-session" id="btn-auth-trigger" onclick="triggerManualAuth()">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+        <span>Connecter LinkedIn</span>
+      </button>
+    </div>
+
+    <div class="session-card" style="margin-top: 10px;">
+      <div class="session-header">
+        <div class="session-indicator" id="hw-session-indicator" style="background: var(--color-amber);"></div>
+        <span class="session-title">Session HelloWork</span>
+      </div>
+      <p class="session-details" id="hw-session-info">Chargement...</p>
+      <button class="btn-session" id="btn-hw-auth-trigger" onclick="triggerHelloWorkAuth()">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+        <span>Connecter HelloWork</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Contenu Principal -->
+  <main class="main-content">
+    <!-- Header supérieur -->
+    <header class="topbar">
+      <div class="topbar-search">
+        <span class="status-chip account" id="topbar-account">
+          <span class="icon">👤</span> <strong id="topbar-account-email">yasschirawill@gmail.com</strong>
+        </span>
+        <span class="status-chip stealth">
+          <span class="dot"></span> Stealth Actif
+        </span>
+        <span class="status-chip success" id="topbar-automode" style="background: rgba(16, 185, 129, 0.15); color: var(--color-emerald); border: 1px solid rgba(16, 185, 129, 0.3);">
+          <span class="dot" style="background: var(--color-emerald);"></span> 100% Automatique
+        </span>
+        <span class="status-chip target-location">
+          <span class="icon">📍</span> Créteil / Paris, FR
+        </span>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="btn-action secondary" id="btn-refresh-stats">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Actualiser
+        </button>
+        <button class="btn-action primary" id="btn-quick-run">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Lancer Campagne
+        </button>
+      </div>
+    </header>
+
+    <!-- TAB 1 : DASHBOARD -->
+    <section class="tab-pane active" id="pane-dashboard">
+      <div class="hero-welcome">
+        <div>
+          <h1 class="hero-title">Orchestrateur Intelligent LinkedIn</h1>
+          <p class="hero-subtitle">
+            Pilotage furtif des candidatures Easy Apply, expansion de réseau qualifié et prospection ciblée pour <strong class="text-accent">BayIIn ERP</strong>.
+          </p>
+        </div>
+        <div class="stealth-shield">
+          <div class="shield-icon">🛡️</div>
+          <div class="shield-text">
+            <strong>Protection Anti-Ban</strong>
+            <span>Simulation biométrique activée</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Statistiques / KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi-card" id="kpi-applied">
+          <div class="kpi-top">
+            <span class="kpi-label">Candidatures Envoyées</span>
+            <div class="kpi-badge success">+12%</div>
+          </div>
+          <div class="kpi-value" id="val-applied">28</div>
+          <div class="kpi-progress">
+            <div class="kpi-bar" style="width: 70%;"></div>
+          </div>
+          <span class="kpi-sub">Quota : 15 / session max</span>
+        </div>
+
+        <div class="kpi-card" id="kpi-invites">
+          <div class="kpi-top">
+            <span class="kpi-label">Invitations Tech Réseau</span>
+            <div class="kpi-badge info">CTO & RH</div>
+          </div>
+          <div class="kpi-value" id="val-invites">42</div>
+          <div class="kpi-progress">
+            <div class="kpi-bar" style="width: 84%; background: var(--color-blue);"></div>
+          </div>
+          <span class="kpi-sub">Taux d'acceptation estimé : 36%</span>
+        </div>
+
+        <div class="kpi-card" id="kpi-saas">
+          <div class="kpi-top">
+            <span class="kpi-label">Leads BayIIn Détectés</span>
+            <div class="kpi-badge purple">E-commerce</div>
+          </div>
+          <div class="kpi-value" id="val-saas">19</div>
+          <div class="kpi-progress">
+            <div class="kpi-bar" style="width: 63%; background: var(--color-purple);"></div>
+          </div>
+          <span class="kpi-sub">Hashtags #saas #logistique</span>
+        </div>
+
+        <div class="kpi-card" id="kpi-success">
+          <div class="kpi-top">
+            <span class="kpi-label">Taux d'Exécution Furtive</span>
+            <div class="kpi-badge success">100%</div>
+          </div>
+          <div class="kpi-value">0 <span class="unit">détection</span></div>
+          <div class="kpi-progress">
+            <div class="kpi-bar" style="width: 100%; background: var(--color-emerald);"></div>
+          </div>
+          <span class="kpi-sub">Aucun blocage ni captcha imposé</span>
+        </div>
+      </div>
+
+      <!-- Grille Principale Dashboard -->
+      <div class="dashboard-split">
+        <!-- Colonne Gauche : Modules d'exécution rapide -->
+        <div class="panel module-selector-panel">
+          <div class="panel-header">
+            <h3>Modules d'Action Immédiate</h3>
+            <span class="tag-live">Prêt à exécuter</span>
+          </div>
+
+          <div class="module-cards-list">
+            <!-- Module Easy Apply -->
+            <div class="module-item">
+              <div class="module-icon icon-apply">📝</div>
+              <div class="module-info">
+                <h4>Candidatures Easy Apply Semi-Auto</h4>
+                <p>Recherche ciblée Full Stack / Java / React, remplissage automatique basé sur votre CV, validation semi-auto.</p>
+                <div class="module-meta">
+                  <span>Quota : 15</span>
+                  <span>Filtre : Candidature Simplifiée</span>
+                  <span>CV : Détecté automatiquement</span>
+                </div>
+              </div>
+              <button class="btn-module-run" id="btn-run-easy-apply" onclick="triggerRun('easyApply')">
+                Démarrer
+              </button>
+            </div>
+
+            <!-- Module HelloWork 1-Clic -->
+            <div class="module-item">
+              <div class="module-icon icon-apply" style="background: rgba(16, 185, 129, 0.15); color: var(--color-emerald);">💼</div>
+              <div class="module-info">
+                <h4>Candidatures HelloWork (1 Clic CDI)</h4>
+                <p>Postulation automatique aux offres CDI Full Stack Java Spring React à Paris/IDF. Filtrage strict anti-stage et injection automatique du CV + pitch.</p>
+                <div class="module-meta">
+                  <span>HelloWork France</span>
+                  <span>CDI Paris / IDF</span>
+                  <span>Pitch Bac+5 BNP</span>
+                  <span>Filtre Anti-Stage</span>
+                </div>
+              </div>
+              <button class="btn-module-run" id="btn-run-hellowork" onclick="triggerRun('helloWork')">
+                Démarrer
+              </button>
+            </div>
+
+            <!-- Module Talent Acquisition & Recruteurs RH -->
+            <div class="module-item">
+              <div class="module-icon icon-network" style="background: rgba(14, 165, 233, 0.15); color: var(--color-cyan);">🎯</div>
+              <div class="module-info">
+                <h4>Connexions Recruteurs & RH (Talent Acquisition)</h4>
+                <p>Cible spécifiquement les Talent Acquisition Specialists, Recruteurs Tech et RH en France. Envoi d'invitations avec votre pitch candidat Java/React.</p>
+                <div class="module-meta">
+                  <span>Talent Acquisition</span>
+                  <span>Tech Recruiter</span>
+                  <span>Responsable RH</span>
+                  <span>France / IDF</span>
+                </div>
+              </div>
+              <button class="btn-module-run" id="btn-run-recruiters" onclick="triggerRun('networking', { targetCategory: 'talent_acquisition' })">
+                Démarrer Recruteurs
+              </button>
+            </div>
+
+            <!-- Module BayIIn Smart Social Selling (E-commerce & Facturation Maroc) -->
+            <div class="module-item">
+              <div class="module-icon icon-saas" style="background: rgba(245, 158, 11, 0.15); color: var(--color-amber);">🇲🇦</div>
+              <div class="module-info">
+                <h4>BayIIn Social Selling (Posts E-com & Facturation Maroc)</h4>
+                <p>Recherche de posts récents sur l'e-commerce, la facturation ICE et les PME au Maroc. Likes par-ci par-là, commentaires d'expert et invitations ciblées.</p>
+                <div class="module-meta">
+                  <span>E-commerce Maroc</span>
+                  <span>Facturation & Devis ICE</span>
+                  <span>Likes ~60%</span>
+                  <span>Commentaires Experts</span>
+                </div>
+              </div>
+              <button class="btn-module-run" id="btn-run-social-selling" onclick="triggerRun('outreach', { mode: 'postsSearch' })">
+                Démarrer Posts
+              </button>
+            </div>
+
+            <!-- Module Simulation Humaine & Warm-up (1 Heure) -->
+            <div class="module-item" id="module-item-simulation">
+              <div class="module-icon icon-network" style="background: rgba(168, 85, 247, 0.15); color: var(--color-purple);">⏱️</div>
+              <div class="module-info">
+                <h4>Simulation Humaine & Warm-up (1 Heure)</h4>
+                <p>Navigation continue naturelle (60 min) : défilement doux, pauses de lecture réalistes (8-25s), likes spontanés (~20%), consultation d'offres d'emploi et de notifications.</p>
+                <div class="module-meta">
+                  <span id="sim-status-badge" class="sim-timer-pill">Durée : 60 min</span>
+                  <span id="sim-posts-viewed">Posts lus : 0</span>
+                  <span id="sim-posts-liked">Likes : 0</span>
+                </div>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn-module-run" id="btn-run-simulation" onclick="triggerRun('humanSimulation')">
+                  Démarrer 1h
+                </button>
+                <button class="btn-module-stop" id="btn-stop-simulation" onclick="triggerStopModule()" style="display: none;">
+                  Arrêter
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Colonne Droite : Terminal / Activité en Direct -->
+        <div class="panel live-activity-panel">
+          <div class="panel-header">
+            <h3>Moniteur d'Activité</h3>
+            <div class="terminal-dots">
+              <span class="t-dot red"></span>
+              <span class="t-dot yellow"></span>
+              <span class="t-dot green"></span>
+            </div>
+          </div>
+
+          <div class="live-console" id="dashboard-console">
+            <div class="log-line info"><span class="log-time">[15:49:22]</span> Initialisation du moteur Playwright Stealth...</div>
+            <div class="log-line success"><span class="log-time">[15:49:24]</span> Empreinte Chromium masquée : navigator.webdriver = undefined</div>
+            <div class="log-line info"><span class="log-time">[15:49:25]</span> Délais gaussiens Box-Muller chargés (frappe 45-180ms)</div>
+            <div class="log-line system"><span class="log-time">[15:50:00]</span> Prêt. Sélectionnez un module ou configurez les critères.</div>
+          </div>
+
+          <div class="semi-auto-banner" id="semi-auto-alert" style="display: none;">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-content">
+              <strong>Intervention Semi-Automatique Requise !</strong>
+              <p id="semi-auto-msg">Un champ de formulaire nécessite votre confirmation dans Chromium.</p>
+            </div>
+            <div class="alert-buttons">
+              <button class="btn-alert confirm" onclick="resolveSemiAuto('resume')">Continuer</button>
+              <button class="btn-alert skip" onclick="resolveSemiAuto('skip')">Sauter l'offre</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2 : CANDIDAT & MATRICE DE COMPÉTENCES -->
+    <section class="tab-pane" id="pane-candidate">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>Profil Candidat & Matrice de Compétences (Easy Apply)</h3>
+            <p class="panel-desc">Personnalisez vos coordonnées et vos compétences pour l'auto-complétion automatique des formulaires LinkedIn & HelloWork.</p>
+          </div>
+          <button class="btn-action primary" onclick="saveCandidateProfile()">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Enregistrer mon profil
+          </button>
+        </div>
+
+        <h4 class="form-section-title">1. Informations Personnelles & Coordonnées</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="cand-firstname">Prénom</label>
+            <input type="text" id="cand-firstname" placeholder="Ex: Jean">
+          </div>
+          <div class="form-group">
+            <label for="cand-lastname">Nom</label>
+            <input type="text" id="cand-lastname" placeholder="Ex: Dupont">
+          </div>
+          <div class="form-group">
+            <label for="cand-email-input">Email de contact</label>
+            <input type="email" id="cand-email-input" placeholder="Ex: jean.dupont@email.com">
+            <span class="input-hint">Injecté dans les formulaires de candidature</span>
+          </div>
+          <div class="form-group">
+            <label for="cand-phone-input">Numéro de Téléphone</label>
+            <input type="tel" id="cand-phone-input" placeholder="Ex: +33 6 12 34 56 78">
+            <span class="input-hint">Injecté pour les demandes de rappel</span>
+          </div>
+          <div class="form-group">
+            <label for="cand-city-input">Ville / Localisation</label>
+            <input type="text" id="cand-city-input" placeholder="Ex: Paris, Lyon, Casablanca...">
+          </div>
+          <div class="form-group">
+            <label for="cand-exp-input">Années d'expérience globale</label>
+            <input type="number" id="cand-exp-input" min="0" max="40" placeholder="Ex: 4">
+            <span class="input-hint">Injecté pour les questions génériques "Années d'expérience"</span>
+          </div>
+          <div class="form-group">
+            <label for="cand-salary-input">Prétention salariale (€ / an)</label>
+            <input type="text" id="cand-salary-input" placeholder="Ex: 50000">
+            <span class="input-hint">Injecté pour les questions de rémunération souhaitée</span>
+          </div>
+          <div class="form-group">
+            <label for="cand-degree-input">Plus haut diplôme</label>
+            <input type="text" id="cand-degree-input" placeholder="Ex: Master / Bac+5, Licence, Ingénieur...">
+          </div>
+        </div>
+
+        <div class="skill-badge-header">
+          <h4 class="form-section-title" style="margin: 0;">2. Matrice des Compétences & Années d'Expérience</h4>
+          <span class="skill-count-badge" id="skills-total-count">0 compétences</span>
+        </div>
+        <p class="section-subtext">Ces compétences sont détectées dans les questions des recruteurs (ex : "Combien d'années sur Python ?"). Le bot saisira automatiquement vos années exactes.</p>
+
+        <div class="skills-add-bar">
+          <input type="text" id="new-skill-name" placeholder="Nom de la compétence (ex: Python, Excel, SQL, React, Vente...)" onkeydown="if(event.key==='Enter') addSkillFromInputs()">
+          <input type="number" id="new-skill-years" placeholder="Années" value="3" min="0" max="40" onkeydown="if(event.key==='Enter') addSkillFromInputs()">
+          <button type="button" class="btn-add-skill" onclick="addSkillFromInputs()">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            + Ajouter
+          </button>
+        </div>
+
+        <div class="skills-quick-suggestions">
+          <span>💡 Suggestions rapides :</span>
+          <span class="quick-skill-tag" onclick="quickAddSkill('Python', 3)">+ Python</span>
+          <span class="quick-skill-tag" onclick="quickAddSkill('SQL', 3)">+ SQL</span>
+          <span class="quick-skill-tag" onclick="quickAddSkill('Excel', 4)">+ Excel</span>
+          <span class="quick-skill-tag" onclick="quickAddSkill('React', 3)">+ React</span>
+          <span class="quick-skill-tag" onclick="quickAddSkill('JavaScript', 4)">+ JavaScript</span>
+          <span class="quick-skill-tag" onclick="quickAddSkill('TypeScript', 3)">+ TypeScript</span>
+          <span class="quick-skill-tag" onclick="quickAddSkill('Java', 4)">+ Java</span>
+          <span class="quick-skill-tag" onclick="quickAddSkill('Docker', 2)">+ Docker</span>
+          <span class="quick-skill-tag" onclick="quickAddSkill('PowerBI', 2)">+ PowerBI</span>
+          <span class="quick-skill-tag" onclick="quickAddSkill('Gestion de projet', 3)">+ Gestion de projet</span>
+          <span class="quick-skill-tag" onclick="quickAddSkill('Marketing Digital', 3)">+ Marketing Digital</span>
+          <span class="quick-skill-tag" onclick="quickAddSkill('Agile Scrum', 3)">+ Agile Scrum</span>
+        </div>
+
+        <div class="skills-matrix-grid" id="skills-grid">
+          <!-- Injecté dynamiquement par JavaScript -->
+        </div>
+
+        <h4 class="form-section-title">3. Pitch de Motivation Auto-Injecté</h4>
+        <div class="form-group">
+          <label for="cand-pitch-textarea">Texte inséré automatiquement dans les champs "Pourquoi vous ?", "Lettre de motivation" ou "Message au recruteur" :</label>
+          <textarea id="cand-pitch-textarea" rows="4" placeholder="Présentez brièvement vos forces et votre parcours..."></textarea>
+        </div>
+
+        <div style="margin-top: 24px; display: flex; justify-content: flex-end;">
+          <button class="btn-action primary" style="padding: 12px 24px; font-size: 0.95rem;" onclick="saveCandidateProfile()">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Enregistrer mon profil et mes compétences
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB : INTELLIGENCE CV & CHASSEUR D'OFFRES -->
+    <section class="tab-pane" id="pane-cv-matcher">
+      <!-- Input de téléversement masqué -->
+      <input type="file" id="cv-file-upload-input" accept=".pdf,.txt" style="display: none;" onchange="handleCVUpload(event)">
+
+      <!-- En-tête Compact du Module CV -->
+      <div class="hero-welcome cv-hero-compact">
+        <div>
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+            <h1 class="hero-title" style="margin-bottom: 0;">📄 Intelligence CV & Chasseur d'Offres</h1>
+            <span class="status-chip domain" id="cv-domain-badge" style="background: rgba(6, 182, 212, 0.15); color: var(--color-cyan); border: 1px solid rgba(6, 182, 212, 0.3); font-weight: 600;">
+              💼 Domaine : Multi-Métiers
+            </span>
+          </div>
+          <p class="hero-subtitle" style="font-size: 0.88rem; margin-bottom: 0;">
+            Extraction sémantique tout domaine (Achats, Logistique, Marketing, Finance, RH, Tech), scoring ATS et sélection des meilleures offres.
+          </p>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn-action secondary" id="btn-trigger-upload-cv" onclick="document.getElementById('cv-file-upload-input').click()" style="padding: 8px 14px; font-size: 0.82rem;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Téléverser PDF
+          </button>
+          <button class="btn-action primary" id="btn-trigger-extract-cv" onclick="triggerExtractCV()" style="padding: 8px 14px; font-size: 0.82rem;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            Analyser mon CV
+          </button>
+          <button class="btn-action secondary" id="btn-sync-cv-config" onclick="syncCVToOrchestrator()" style="border-color: rgba(16, 185, 129, 0.4); color: var(--color-emerald); padding: 8px 14px; font-size: 0.82rem;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Synchroniser Profil
+          </button>
+        </div>
+      </div>
+
+      <!-- Barre de Sous-Onglets pour alléger la vue -->
+      <div class="cv-subnav-bar">
+        <button class="cv-subnav-btn active" id="subtab-btn-hunter" onclick="switchCVSubtab('hunter')">
+          <span>🎯 Chasseur des Meilleures Offres</span>
+          <span class="subtab-counter" id="subtab-offers-count">Top Matches</span>
+        </button>
+        <button class="cv-subnav-btn" id="subtab-btn-profile" onclick="switchCVSubtab('profile')">
+          <span>📄 Profil & Mots-Clés du CV</span>
+          <span class="subtab-counter" id="subtab-skills-count">39 compétences</span>
+        </button>
+        <button class="cv-subnav-btn" id="subtab-btn-simulator" onclick="switchCVSubtab('simulator')">
+          <span>🔍 Testeur ATS Instantané</span>
+        </button>
+      </div>
+
+      <!-- SOUS-ONGLET 1 : CHASSEUR DES MEILLEURES OFFRES (ACTIF PAR DÉFAUT) -->
+      <div class="cv-subpane active" id="cv-subpane-hunter">
+        <div class="panel">
+          <div class="panel-header" style="margin-bottom: 12px;">
+            <div>
+              <h3>🎯 Chasseur & Classement des Meilleures Offres</h3>
+              <p class="panel-desc">Scanne et ordonne les opportunités du marché selon l'adéquation exacte avec vos mots-clés et votre domaine.</p>
+            </div>
+          </div>
+
+          <div class="hunter-control-bar">
+            <div class="hunter-input-group" style="flex: 2;">
+              <label for="hunt-query-input">Mots-clés de Chasse :</label>
+              <input type="text" id="hunt-query-input" value="Ingénieur Full Stack" placeholder="Ex: Responsable Achats, Contrôleur de gestion, Chef de projet Marketing...">
+            </div>
+            <div class="hunter-input-group" style="flex: 1;">
+              <label for="hunt-platform-select">Plateforme Cible :</label>
+              <select id="hunt-platform-select">
+                <option value="both" selected>LinkedIn & HelloWork (Tous)</option>
+                <option value="linkedin">LinkedIn Easy Apply uniquement</option>
+                <option value="hellowork">HelloWork (1-Clic CDI)</option>
+              </select>
+            </div>
+            <div class="hunter-input-group" style="flex: 1;">
+              <label for="hunt-min-score">Seuil ATS : <strong id="hunt-min-score-val" style="color: var(--color-cyan);">50%</strong></label>
+              <input type="range" id="hunt-min-score" min="40" max="90" step="5" value="50" oninput="document.getElementById('hunt-min-score-val').innerText = this.value + '%'">
+            </div>
+            <button class="btn-action primary" id="btn-hunt-offers" onclick="triggerHuntJobs()" style="height: 42px; align-self: flex-end;">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Lancer la Chasse
+            </button>
+          </div>
+
+          <div class="hunter-stats-bar" id="hunt-stats-bar" style="display: none;">
+            <span id="hunt-count-text">Offres sélectionnées</span>
+            <span id="hunt-top-badge" class="badge-success">Top Score</span>
+          </div>
+
+          <!-- Grille des Offres Classées -->
+          <div class="ranked-offers-grid" id="hunt-results-container">
+            <div class="hunter-empty-state">
+              <div class="empty-icon">🎯</div>
+              <h4>Prêt à chasser les meilleures opportunités</h4>
+              <p>Cliquez sur "Lancer la Chasse" pour scanner, classer et visualiser les offres idéales alignées avec votre parcours.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SOUS-ONGLET 2 : PROFIL & MOTS-CLÉS DU CV -->
+      <div class="cv-subpane" id="cv-subpane-profile">
+        <div class="dashboard-split" style="margin-bottom: 20px;">
+          <!-- Carte Fichier & Candidat -->
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h3>Fichier CV & Identité Détectée</h3>
+                <p class="panel-desc">Données automatiquement extraites de votre document.</p>
+              </div>
+              <span class="status-chip success" id="cv-status-pill">
+                <span class="dot"></span> CV Actif
+              </span>
+            </div>
+
+            <div class="cv-file-status-box">
+              <div class="cv-file-icon">📑</div>
+              <div class="cv-file-details">
+                <strong id="cv-doc-name">CV_Yassir_Chirawi.pdf</strong>
+                <span id="cv-doc-meta">Format : PDF Haute Définition · Extrait et prêt</span>
+              </div>
+              <button class="btn-mini-action" onclick="document.getElementById('cv-file-upload-input').click()">Changer</button>
+            </div>
+
+            <div class="cv-cand-summary-grid">
+              <div class="cv-summary-item">
+                <span class="label">Candidat</span>
+                <strong id="cv-cand-name">Yassir CHIRAWI</strong>
+              </div>
+              <div class="cv-summary-item">
+                <span class="label">Titre Métier Détecté</span>
+                <strong id="cv-cand-title" style="color: var(--color-cyan);">Ingénieur Full Stack Java React</strong>
+              </div>
+              <div class="cv-summary-item">
+                <span class="label">Expérience</span>
+                <strong id="cv-cand-exp">4 - 6 ans</strong>
+              </div>
+              <div class="cv-summary-item">
+                <span class="label">Diplôme</span>
+                <strong id="cv-cand-degree">Master / Bac+5</strong>
+              </div>
+              <div class="cv-summary-item" style="grid-column: span 2;">
+                <span class="label">Contact & Localisation</span>
+                <span id="cv-cand-contact" style="font-size: 0.85rem; color: var(--text-muted);">yasschirawill@gmail.com · Créteil / Paris</span>
+              </div>
+            </div>
+
+            <div style="margin-top: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-muted);">Pitch de Motivation Détecté :</span>
+                <button class="btn-mini-action" onclick="copyExtractedPitch()">Copier</button>
+              </div>
+              <p class="cv-pitch-quote" id="cv-cand-pitch">
+                "Professionnel orienté performance, rigueur et atteinte des objectifs..."
+              </p>
+            </div>
+          </div>
+
+          <!-- Carte Requêtes et Recommandations -->
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h3>Requêtes de Recherche Ciblées</h3>
+                <p class="panel-desc">Recommandations automatiques pour vos recherches LinkedIn & HelloWork.</p>
+              </div>
+              <span class="tag-live">Auto-Généré</span>
+            </div>
+
+            <div class="cv-query-box">
+              <span class="query-box-title">🎯 Requête Principale :</span>
+              <div class="query-display-bar">
+                <code id="cv-primary-query">Ingénieur Full Stack React Java</code>
+                <button class="btn-copy-code" onclick="applyQueryToHunter()">Tester</button>
+              </div>
+            </div>
+
+            <div style="margin-top: 14px;">
+              <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 6px;">Variantes Suggérées (Cliquer pour appliquer) :</span>
+              <div class="cv-query-tags" id="cv-suggested-queries">
+                <!-- Injecté dynamiquement -->
+              </div>
+            </div>
+
+            <div style="margin-top: 14px;">
+              <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Requête Booléenne LinkedIn :</span>
+              <div class="boolean-code-snippet">
+                <span id="cv-boolean-query">("Ingénieur") AND ("react" OR "java")</span>
+                <button class="btn-mini-action" onclick="copyBooleanQuery()">Copier</button>
+              </div>
+            </div>
+
+            <div style="margin-top: 10px;">
+              <span style="font-size: 0.82rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">Requête HelloWork :</span>
+              <div class="boolean-code-snippet" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.2);">
+                <span id="cv-hellowork-query">Ingénieur Full Stack</span>
+                <button class="btn-mini-action" onclick="setHuntQuery(document.getElementById('cv-hellowork-query').innerText); switchCVSubtab('hunter');">Appliquer</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nuage de Compétences Filtrable -->
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <h3>Matrice & Nuage de Compétences Extraites</h3>
+              <p class="panel-desc">Compétences classées par priorité ATS (Poids 3 = Pilier majeur, Poids 2 = Important, Poids 1 = Complémentaire).</p>
+            </div>
+            <div class="cv-skills-filter-tabs">
+              <button class="skill-tab-btn active" onclick="filterCVSkills('all')">Tous (<span id="count-skills-all">0</span>)</button>
+              <button class="skill-tab-btn" onclick="filterCVSkills('achats_sourcing')">Achats</button>
+              <button class="skill-tab-btn" onclick="filterCVSkills('logistique_supply')">Logistique</button>
+              <button class="skill-tab-btn" onclick="filterCVSkills('marketing_communication')">Marketing</button>
+              <button class="skill-tab-btn" onclick="filterCVSkills('finance_comptabilite')">Finance</button>
+              <button class="skill-tab-btn" onclick="filterCVSkills('tech_it')">Tech & Data</button>
+            </div>
+          </div>
+
+          <div class="cv-skills-cloud-container" id="cv-skills-cloud">
+            <!-- Injecté dynamiquement -->
+          </div>
+        </div>
+      </div>
+
+      <!-- SOUS-ONGLET 3 : SIMULATEUR ATS INSTANTANÉ -->
+      <div class="cv-subpane" id="cv-subpane-simulator">
+        <div class="panel">
+          <div class="panel-header">
+            <div>
+              <h3>🔍 Simulateur ATS & Testeur d'Offre Immédiat</h3>
+              <p class="panel-desc">Collez le titre et le descriptif de n'importe quelle offre pour obtenir son score d'adéquation en direct.</p>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="sim-job-title">Intitulé du Poste</label>
+              <input type="text" id="sim-job-title" placeholder="Ex: Responsable Achats, Contrôleur de gestion, Développeur Full Stack...">
+            </div>
+            <div class="form-group">
+              <label for="sim-job-company">Entreprise (Optionnel)</label>
+              <input type="text" id="sim-job-company" placeholder="Ex: LVMH, BNP Paribas, Danone, Startup...">
+            </div>
+            <div class="form-group" style="grid-column: span 2;">
+              <label for="sim-job-desc">Extrait ou Descriptif Technique de l'Offre</label>
+              <textarea id="sim-job-desc" rows="3" placeholder="Collez ici les compétences et missions demandées..."></textarea>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; margin-top: 12px;">
+            <button class="btn-action primary" id="btn-eval-job" onclick="triggerEvaluateCustomJob()">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Calculer le Score ATS
+            </button>
+          </div>
+
+          <div class="sim-result-card" id="sim-eval-result" style="display: none; margin-top: 20px;">
+            <div class="sim-score-circle">
+              <div class="score-number" id="sim-score-val">95%</div>
+              <div class="score-grade" id="sim-grade-val">GRADE A+</div>
+            </div>
+            <div class="sim-result-details">
+              <h4 id="sim-result-title">Excellente adéquation avec votre CV !</h4>
+              <p id="sim-result-rec" style="color: var(--color-emerald); font-weight: 500; margin-bottom: 8px;">Postuler en priorité absolue</p>
+              <div class="sim-tech-breakdown">
+                <div>
+                  <span class="label">Points forts matchés :</span>
+                  <div class="tags-container" id="sim-matched-tags"></div>
+                </div>
+                <div>
+                  <span class="label">Points à valoriser :</span>
+                  <div class="tags-container" id="sim-missing-tags"></div>
+                </div>
+              </div>
+              <div class="sim-reasons-list" id="sim-reasons-container"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3 : CAMPAGNES & QUOTAS -->
+    <section class="tab-pane" id="pane-campaigns">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>Configuration des Quotas & Paramètres Multi-Plateformes</h3>
+            <p class="panel-desc">Paramétrez les seuils stricts et critères pour LinkedIn et HelloWork.</p>
+          </div>
+          <button class="btn-action primary" onclick="saveCampaignConfig()">Enregistrer les paramètres</button>
+        </div>
+
+        <h4 class="form-section-title">Paramètres LinkedIn (Candidatures & Prospection)</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="q-easyapply">Max Candidatures Easy Apply / Session</label>
+            <input type="number" id="q-easyapply" value="15" min="1" max="50">
+            <span class="input-hint">Recommandé : 10 à 15 par jour max</span>
+          </div>
+          <div class="form-group">
+            <label for="q-networking">Max Invitations Réseau / Session</label>
+            <input type="number" id="q-networking" value="15" min="1" max="30">
+            <span class="input-hint">Recommandé : 15 max (LinkedIn limite à ~100/semaine)</span>
+          </div>
+          <div class="form-group">
+            <label for="q-outreach">Max Contacts Prospection SaaS / Session</label>
+            <input type="number" id="q-outreach" value="10" min="1" max="25">
+            <span class="input-hint">Recommandé : 10 max</span>
+          </div>
+          <div class="form-group">
+            <label for="search-keywords">Mots-clés Recherche LinkedIn</label>
+            <input type="text" id="search-keywords" value="Full Stack Java Spring Boot React TypeScript">
+          </div>
+          <div class="form-group">
+            <label for="excluded-keywords">Filtre d'Exclusion Strict (Anti-Stage / Hors Cible)</label>
+            <input type="text" id="excluded-keywords" value="stage, alternance, internship, apprenti, junior, php, wordpress">
+            <span class="input-hint">Toute offre contenant ces termes sera rejetée automatiquement</span>
+          </div>
+          <div class="form-group">
+            <label for="required-keywords">Technologies Indispensables (Whitelist)</label>
+            <input type="text" id="required-keywords" value="java, spring, react, typescript, full stack, microservices">
+            <span class="input-hint">Une offre doit contenir au moins un de ces mots-clés</span>
+          </div>
+        </div>
+
+        <h4 class="form-section-title">Paramètres HelloWork France (Candidatures Simplifiées)</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="hw-keywords">Mots-clés Recherche HelloWork</label>
+            <input type="text" id="hw-keywords" value="Ingénieur Full Stack Java Spring Boot React">
+          </div>
+          <div class="form-group">
+            <label for="hw-location">Localisation HelloWork</label>
+            <input type="text" id="hw-location" value="Paris 75000">
+            <span class="input-hint">Ex : Paris 75000, Île-de-France, Lyon...</span>
+          </div>
+          <div class="form-group">
+            <label for="hw-contract">Type de Contrat Cible</label>
+            <select id="hw-contract" style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); color: var(--text-main); padding: 8px; border-radius: 6px; width: 100%;">
+              <option value="CDI" selected>CDI (Contrat à Durée Indéterminée)</option>
+              <option value="Cadre">Cadre</option>
+              <option value="Freelance">Freelance</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="hw-quota">Max Candidatures HelloWork / Session</label>
+            <input type="number" id="hw-quota" value="15" min="1" max="50">
+            <span class="input-hint">Recommandé : 15 à 25 par session</span>
+          </div>
+        </div>
+
+        <h4 class="form-section-title">Mode d'Exécution & Autonomie (100% Automatique)</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="auto-mode-toggle">Mode d'Exécution du Bot</label>
+            <select id="auto-mode-toggle" style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); color: var(--text-main); padding: 8px; border-radius: 6px; width: 100%;">
+              <option value="true" selected>⚡ 100% Automatique (Autonome, zéro freeze, SmartFormSolver)</option>
+              <option value="false">✋ Semi-Automatique (Intervention manuelle en cas d'imprévu)</option>
+            </select>
+            <span class="input-hint">En mode 100% automatique, le bot ne bloque jamais la console et saute proprement toute offre non franchissable.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="min-match-score">Score Minimum de Pertinence JobScorer (%)</label>
+            <input type="number" id="min-match-score" value="50" min="20" max="95">
+            <span class="input-hint">Seuil (ex: 50%) pour valider l'adéquation technique avant de postuler.</span>
+          </div>
+
+          <div class="form-group" style="grid-column: span 2;">
+            <label for="gemini-api-key">Clé API Google Gemini (Optionnelle - IA Générative pour Pitchs Sur-Mesure)</label>
+            <input type="password" id="gemini-api-key" placeholder="Collez votre clé API Gemini (ex: AIzaSy...)">
+            <span class="input-hint">Permet au SmartFormSolver de rédiger des réponses sur-mesure aux questions ouvertes de motivation.</span>
+          </div>
+        </div>
+
+        <h4 class="form-section-title">Options d'Intelligence Artificielle & Warm Outreach</h4>
+        <div class="checkbox-grid">
+          <label class="custom-checkbox">
+            <input type="checkbox" id="ai-comment-toggle" checked>
+            <span class="checkmark"></span>
+            Activer la rédaction et publication automatique de commentaires d'experts (Warm Outreach)
+          </label>
+          <label class="custom-checkbox">
+            <input type="checkbox" id="ai-notes-toggle" checked>
+            <span class="checkmark"></span>
+            Générer des notes d'invitation uniques contextualisées au contenu du prospect (&lt; 300 car.)
+          </label>
+        </div>
+
+        <h4 class="form-section-title">Modèle de Note d'Invitation (Réseautage & Chasseurs de Têtes)</h4>
+        <div class="form-group">
+          <label for="note-template">Texte du message (< 300 caractères obligatoires)</label>
+          <textarea id="note-template" rows="3">Bonjour {{firstName}}, impressionné par la rigueur de vos projets. Ingénieur Full Stack (Java Spring Boot, React & IA), je serais ravi d'échanger et de rejoindre votre réseau. Bien à vous, Yassir</textarea>
+          <div class="char-count"><span id="char-note-count">198</span> / 300 caractères</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4 : PROSPECTION B2B BAYIIN MAROC -->
+    <section class="tab-pane" id="pane-saas">
+      <!-- Bandeau Produit BayIIn -->
+      <div class="bayiin-hero-banner">
+        <div class="bayiin-hero-header">
+          <div class="bayiin-logo-badge">
+            <span class="logo-icon">🇲🇦</span>
+            <div>
+              <h2>BayIIn — Moteur de Prospection & Démarchage B2B Maroc</h2>
+              <p class="hero-tagline">ERP tout-en-un pour marchands e-commerce & marques D2C en Cash on Delivery (COD) au Maroc</p>
+            </div>
+          </div>
+          <div class="bayiin-status-pills">
+            <a href="https://bayiin.shop" target="_blank" class="pill-link">🔗 bayiin.shop</a>
+            <span class="pill-feature">🚚 Cathedis · Sendit · O-Livraison</span>
+            <span class="pill-feature">💰 Marge Nette & AWB</span>
+            <span class="pill-feature">🤖 Beya3 WhatsApp</span>
+          </div>
+        </div>
+
+        <!-- 5 Piliers Produit Clés -->
+        <div class="bayiin-pillars-grid">
+          <div class="pillar-card">
+            <div class="pillar-icon">📦</div>
+            <h4>ERP Opérations Centrales</h4>
+            <p>Pilotage des stocks multi-dépôts en temps réel avec déclinaisons (tailles, couleurs). Tunnel de capture et validation rapide des commandes COD.</p>
+          </div>
+          <div class="pillar-card">
+            <div class="pillar-icon">🚚</div>
+            <h4>Hub Logistique Intégré</h4>
+            <p>Connexion API native transporteurs locaux (Cathedis, Sendit, O-Livraison). Génération automatique des AWB et frais de port dynamiques par ville.</p>
+          </div>
+          <div class="pillar-card">
+            <div class="pillar-icon">💵</div>
+            <h4>Réconciliation & Marge Nette</h4>
+            <p>Suivi automatisé des encaissements terrain (Livré, Retourné, Encaissé). Calcul instantané de la rentabilité réelle déduite des retours et du transport.</p>
+          </div>
+          <div class="pillar-card">
+            <div class="pillar-icon">🤖</div>
+            <h4>Copilote IA (Beya3)</h4>
+            <p>Alertes réapprovisionnement, détection des anomalies de livraison, assistance opérationnelle et prise/suivi de commandes via WhatsApp.</p>
+          </div>
+          <div class="pillar-card">
+            <div class="pillar-icon">🌐</div>
+            <h4>Storefront Bilingue FR / AR</h4>
+            <p>Vitrine e-commerce modulaire bilingue (Arabe RTL natif), synchronisée en temps réel avec l'ERP (zéro survente), checkout monopage connecté aux transporteurs.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sélecteur Interactif des 3 Personas Cibles Maroc -->
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>Les 3 Personas Cibles au Maroc</h3>
+            <p class="panel-desc">Sélectionnez le persona pour ajuster automatiquement l'argumentaire, la requête booléenne et les notes d'invitation.</p>
+          </div>
+          <div class="persona-active-badge">
+            Cible active : <strong id="active-persona-label">Tous les 3 Personas (Rotation Intelligente)</strong>
+          </div>
+        </div>
+
+        <div class="personas-cards-grid">
+          <!-- Persona 1 -->
+          <div class="persona-box active" id="card-persona-d2c_founders" onclick="selectPersona('d2c_founders')">
+            <div class="persona-top">
+              <span class="persona-badge">Persona 1</span>
+              <span class="persona-size">1 à 10 salariés</span>
+            </div>
+            <h4>Fondateurs & Gérants D2C</h4>
+            <div class="persona-roles">
+              <span class="role-tag">Fondateur</span>
+              <span class="role-tag">CEO</span>
+              <span class="role-tag">Gérant</span>
+              <span class="role-tag">Brand Owner</span>
+            </div>
+            <div class="persona-sectors">
+              <strong>Secteurs :</strong> Skincare bio, Mode, Maroquinerie, Accessoires, Déco.
+            </div>
+            <div class="persona-pain">
+              <strong>Pourquoi eux (Irritant) :</strong> Portent la casquette de logisticien le soir, marre de saisir les commandes à la main sur les portails transporteurs, flou sur la marge nette réelle.
+            </div>
+            <div class="persona-solution">
+              <strong>Solution BayIIn :</strong> Automatisation des bordereaux AWB + calcul marge nette COD sans saisie manuelle + vitrine FR/AR.
+            </div>
+            <button class="btn-persona-select" type="button">Sélectionné ✔</button>
+          </div>
+
+          <!-- Persona 2 -->
+          <div class="persona-box" id="card-persona-ecom_ops_managers" onclick="selectPersona('ecom_ops_managers')">
+            <div class="persona-top">
+              <span class="persona-badge">Persona 2</span>
+              <span class="persona-size">11 à 50 salariés</span>
+            </div>
+            <h4>Responsables E-commerce & Ops</h4>
+            <div class="persona-roles">
+              <span class="role-tag">E-commerce Manager</span>
+              <span class="role-tag">Head of Ops</span>
+              <span class="role-tag">COO</span>
+              <span class="role-tag">Supply Chain</span>
+            </div>
+            <div class="persona-sectors">
+              <strong>Secteurs :</strong> Retailers locaux, Compléments alimentaires, Parfumerie, Électronique.
+            </div>
+            <div class="persona-pain">
+              <strong>Pourquoi eux (Irritant) :</strong> Réduire le taux de retour (NPAI/refus), suivre les bordereaux d'expédition AWB, éviter les ruptures sur les variantes de stocks.
+            </div>
+            <div class="persona-solution">
+              <strong>Solution BayIIn :</strong> API directe Cathedis, Sendit, O-Livraison + réconciliation des statuts terrain (Livré/Retourné/Encaissé).
+            </div>
+            <button class="btn-persona-select" type="button">Sélectionner</button>
+          </div>
+
+          <!-- Persona 3 -->
+          <div class="persona-box" id="card-persona-growth_agencies" onclick="selectPersona('growth_agencies')">
+            <div class="persona-top">
+              <span class="persona-badge">Persona 3</span>
+              <span class="persona-size">2 à 15 pers. / Freelances</span>
+            </div>
+            <h4>Agences Growth & Media Buyers COD</h4>
+            <div class="persona-roles">
+              <span class="role-tag">Media Buyer</span>
+              <span class="role-tag">Head of Acquisition</span>
+              <span class="role-tag">Founder Agence</span>
+              <span class="role-tag">Consultant COD</span>
+            </div>
+            <div class="persona-sectors">
+              <strong>Secteurs :</strong> Agences acquisition e-commerce, consulting COD, media buying Facebook/TikTok.
+            </div>
+            <div class="persona-pain">
+              <strong>Pourquoi eux (Irritant) :</strong> Prescripteurs gérant plusieurs boutiques, décalage énorme entre ROAS affiché en régie et cash réel encaissé après retours.
+            </div>
+            <div class="persona-solution">
+              <strong>Solution BayIIn :</strong> Tracking live de la rentabilité réelle déduite des refus livreurs + Copilote IA Beya3 & relances WhatsApp.
+            </div>
+            <button class="btn-persona-select" type="button">Sélectionner</button>
+          </div>
+        </div>
+
+        <!-- Paramètres de Campagne & Requête Booléenne -->
+        <h4 class="form-section-title" style="margin-top: 2rem;">Mode de Prospection & Requête LinkedIn</h4>
+        
+        <div class="outreach-mode-selector">
+          <label class="mode-pill active" id="mode-pill-posts">
+            <input type="radio" name="outreach-mode" value="postsSearch" checked onchange="setOutreachMode('postsSearch')">
+            <span>💬 <strong>Smart Social Selling (Posts E-com & Facturation)</strong> — Recherche de publications récentes, likes par-ci par-là, commentaires d'expert et invitations</span>
+          </label>
+          <label class="mode-pill" id="mode-pill-people">
+            <input type="radio" name="outreach-mode" value="peopleSearch" onchange="setOutreachMode('peopleSearch')">
+            <span>🎯 <strong>Recherche Ciblée Décideurs (People Search)</strong> — Scanne directement les décideurs au Maroc via la requête booléenne</span>
+          </label>
+          <label class="mode-pill" id="mode-pill-feed">
+            <input type="radio" name="outreach-mode" value="feed" onchange="setOutreachMode('feed')">
+            <span>🏷️ <strong>Warm Outreach (Hashtags Maroc)</strong> — Exploration des hashtags #ecommerce_maroc, #facturation_maroc</span>
+          </label>
+          <label class="mode-pill" id="mode-pill-both">
+            <input type="radio" name="outreach-mode" value="both" onchange="setOutreachMode('both')">
+            <span>⚡ <strong>Mode Hybride Combiné</strong> — Social selling posts + Décideurs People</span>
+          </label>
+        </div>
+
+        <div class="form-group" id="bayiin-topic-group" style="margin-top: 1rem;">
+          <label for="bayiin-topic-select">Thématique de Social Selling ciblée :</label>
+          <select id="bayiin-topic-select" onchange="updateBayIInTopic()">
+            <option value="all">Toutes les thématiques (E-commerce, Facturation & PME)</option>
+            <option value="ecommerce_maroc">E-commerce, COD & Vente en Ligne Maroc</option>
+            <option value="facturation_maroc">Facturation, Devis, ICE & Trésorerie PME Maroc</option>
+            <option value="pme_digital_maroc">Digitalisation & PME Maroc</option>
+          </select>
+        </div>
+
+        <div class="form-group" style="margin-top: 1.25rem;">
+          <label for="bayiin-boolean-query">Requête Booléenne LinkedIn (Sales Navigator & Recherche Standard) :</label>
+          <div class="query-input-wrap">
+            <input type="text" id="bayiin-boolean-query" value='(Fondateur OR CEO OR "E-commerce Manager" OR Gérant) AND (Marque OR D2C OR "Cash on delivery" OR E-commerce OR Facturation) AND Maroc'>
+            <button class="btn-action secondary small" onclick="copyBooleanQuery()">📋 Copier</button>
+            <button class="btn-action secondary small" onclick="resetBooleanQuery()">↺ Rétablir</button>
+          </div>
+          <span class="input-hint">Cette requête isole précisément les fondateurs de marques, e-com managers, gérants et dirigeants de PME au Maroc.</span>
+        </div>
+
+        <!-- Note d'Approche Persona & Testeur Live -->
+        <h4 class="form-section-title">Message d'Approche Personnalisé (Strictement &lt; 290 caractères)</h4>
+        <div class="form-group">
+          <div class="note-editor-header">
+            <label for="bayiin-note-editor">Note d'invitation transmise au prospect :</label>
+            <div class="char-badge-wrap">
+              <span class="char-count-pill" id="bayiin-char-pill"><strong id="char-bayiin-count">247</strong> / 290 caractères</span>
+              <span class="char-status-badge valid" id="bayiin-char-status">✔ Conforme LinkedIn</span>
+            </div>
+          </div>
+          <textarea id="bayiin-note-editor" rows="3" oninput="handleBayIInNoteInput()">Bonjour {{firstName}}, impressionné par votre marque au Maroc. Avec BayIIn, on aide les marques D2C à automatiser stocks et bordereaux AWB (Cathedis, Sendit) pour suivre la vraie marge nette COD sans saisie manuelle le soir. Preneur de votre avis !</textarea>
+        </div>
+
+        <!-- Testeur de Rendu Réel en Direct -->
+        <div class="preview-box">
+          <div class="preview-header">
+            <span class="preview-title">👁️ Aperçu Rendu Réel (Simulation sur un profil marocain)</span>
+            <div class="preview-name-input">
+              <span>Prénom test :</span>
+              <input type="text" id="preview-test-name" value="Mehdi" oninput="updateBayIInPreview()">
+            </div>
+          </div>
+          <div class="preview-card">
+            <div class="preview-avatar">M</div>
+            <div class="preview-bubble" id="preview-bubble-text">
+              Bonjour Mehdi, impressionné par votre marque au Maroc. Avec BayIIn, on aide les marques D2C à automatiser stocks et bordereaux AWB (Cathedis, Sendit) pour suivre la vraie marge nette COD sans saisie manuelle le soir. Preneur de votre avis !
+            </div>
+          </div>
+        </div>
+
+        <!-- Bouton de Lancement de Campagne -->
+        <div class="bayiin-action-bar">
+          <div class="action-summary">
+            <span id="campaign-summary-text">Prêt à démarrer la campagne sur : <strong>Fondateurs & Gérants D2C Maroc</strong> via Recherche Booléenne.</span>
+          </div>
+          <button class="btn-action primary large" id="btn-launch-bayiin" onclick="launchBayIInCampaign()">
+            🚀 Démarrer la Prospection BayIIn Maroc
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5 : HISTORIQUE D'ACTIONS RÉEL -->
+    <section class="tab-pane" id="pane-history">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h3>Historique Complet des Actions</h3>
+            <p class="panel-desc">Journal certifié de toutes les candidatures, invitations réseau et signaux SaaS envoyés sur LinkedIn.</p>
+          </div>
+          <div class="panel-actions">
+            <button class="btn-action secondary small" onclick="exportHistoryCSV()">📥 Exporter CSV</button>
+            <button class="btn-action secondary small" onclick="exportHistoryJSON()">📥 Exporter JSON</button>
+            <button class="btn-action secondary small" onclick="loadActionHistory()">Actualiser</button>
+            <button class="btn-action secondary small" onclick="clearActionHistory()">Vider l'historique</button>
+          </div>
+        </div>
+
+        <div class="history-controls-row">
+          <div class="history-filter-bar">
+            <button class="filter-pill active" data-filter="all" onclick="filterHistory('all')">Tous (<span id="count-all">0</span>)</button>
+            <button class="filter-pill" data-filter="easy_apply" onclick="filterHistory('easy_apply')">Easy Apply (<span id="count-easy-apply">0</span>)</button>
+            <button class="filter-pill" data-filter="networking" onclick="filterHistory('networking')">Réseau (<span id="count-networking">0</span>)</button>
+            <button class="filter-pill" data-filter="outreach" onclick="filterHistory('outreach')">SaaS BayIIn (<span id="count-outreach">0</span>)</button>
+            <button class="filter-pill" data-filter="hellowork" onclick="filterHistory('hellowork')">HelloWork (<span id="count-hellowork">0</span>)</button>
+          </div>
+          <div class="history-search-box">
+            <input type="text" id="history-search-input" placeholder="🔍 Filtrer par poste, entreprise ou nom..." oninput="handleHistorySearch(this.value)">
+          </div>
+        </div>
+
+        <div class="history-table-wrapper">
+          <table class="history-table" id="history-table">
+            <thead>
+              <tr>
+                <th>Date & Heure</th>
+                <th>Module</th>
+                <th>Type d'action</th>
+                <th>Cible / Entreprise</th>
+                <th>Détails & Messages</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body">
+              <tr>
+                <td colspan="6" class="table-empty">Aucune action enregistrée pour le moment. Lancez un module pour débuter.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 6 : CONSOLE LIVE -->
+    <section class="tab-pane" id="pane-logs">
+      <div class="panel full-height-panel">
+        <div class="panel-header">
+          <h3>Flux d'Exécution & Télémétrie Furtive</h3>
+          <div class="panel-actions">
+            <button class="btn-action secondary small" onclick="clearConsole()">Effacer</button>
+            <button class="btn-action primary small" onclick="simulateSession()">Simuler une séquence</button>
+          </div>
+        </div>
+        <div class="full-terminal" id="full-terminal-output">
+          <div class="log-line info">[16:04:48] Client web connecté sur l'orchestrateur.</div>
+          <div class="log-line system">[16:04:49] Chargement des algorithmes de délais gaussiens (Box-Muller)...</div>
+          <div class="log-line success">[16:04:50] Matrice des compétences candidats synchronisée (Java, React, Spring Boot, Big Data).</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modale d'authentification interactive -->
+  <div class="modal-overlay" id="auth-modal" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-icon">🔑</div>
+      <h3>Connexion Manuelle en Cours</h3>
+      <p>
+        Une fenêtre <strong>Chromium furtive</strong> vient de s'ouvrir sur la page de connexion LinkedIn.
+      </p>
+      <ul class="modal-steps">
+        <li>1. Connectez-vous avec votre identifiant et mot de passe.</li>
+        <li>2. Validez le code 2FA ou le Captcha si demandé.</li>
+        <li>3. Dès que vous atteindrez votre fil d'actualité LinkedIn, la session sera <strong>sauvegardée automatiquement</strong> et cette fenêtre se fermera.</li>
+      </ul>
+      <div class="modal-spinner">
+        <div class="spinner-ring"></div>
+        <span>En attente de la détection de session...</span>
+      </div>
+      <button class="btn-action secondary" onclick="closeAuthModal()">Fermer la notification</button>
+    </div>
+  </div>
+
+  <script src="app.js?v=2.0.0"></script>
+</body>
+</html>

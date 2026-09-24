@@ -1,0 +1,95 @@
+================================================================================
+     NEXUS STEALTH - LINKEDIN & HELLOWORK ORCHESTRATOR
+                GUIDE DE DEMARRAGE RAPIDE
+================================================================================
+
+Bienvenue dans l'orchestrateur d'automatisation de candidatures professionnelles
+et de prospection B2B avec simulation humaine indetectable (Playwright Stealth).
+
+Ce kit est autonome et s'execute directement sur votre ordinateur Windows.
+
+--------------------------------------------------------------------------------
+ ETAPE 0 : INSTALLATION INITIALE (A FAIRE 1 SEULE FOIS)
+--------------------------------------------------------------------------------
+1. Double-cliquez sur "0-Installation-Rapide.bat".
+2. Le script verifie la presence de Node.js (s'il n'est pas installe, il vous
+   ouvre la page officielle pour le telecharger en 1 clic).
+3. Le script installe automatiquement les modules necessaires et le moteur Chromium furtif.
+
+
+--------------------------------------------------------------------------------
+ ETAPE 1 : AJOUTEZ VOTRE PROPRE CV (AU FORMAT PDF)
+--------------------------------------------------------------------------------
+1. Ouvrez le dossier "assets/".
+2. Glissez-y simplement votre fichier de CV au format PDF (ex : "Mon_CV.pdf").
+   -> Le bot detecte et injecte automatiquement votre CV dans les formulaires.
+
+
+--------------------------------------------------------------------------------
+ ETAPE 2 : CONNECTEZ VOS COMPTES (A FAIRE 1 SEULE FOIS)
+--------------------------------------------------------------------------------
+Pour que le bot puisse postuler pour vous en toute securite sans connaitre votre mot de passe :
+
+1. Pour LinkedIn :
+   -> Double-cliquez sur "1-Connexion-LinkedIn.bat".
+   -> Une fenetre Chromium securisee s'ouvre : connectez-vous a LinkedIn
+      et validez l'eventuel code 2FA / SMS.
+   -> Des que vous arrivez sur votre fil d'actualite (/feed), votre session
+      est sauvegardee en local et la fenetre se ferme.
+
+2. Pour HelloWork (Optionnel) :
+   -> Double-cliquez sur "2-Connexion-HelloWork.bat".
+   -> Connectez-vous a votre compte HelloWork.
+
+
+--------------------------------------------------------------------------------
+ ETAPE 3 : LANCEZ L'ORCHESTRATEUR ET VOS CANDIDATURES
+--------------------------------------------------------------------------------
+1. Double-cliquez sur "3-Lancer-Orchestrator.bat".
+   -> Votre navigateur s'ouvre automatiquement sur : http://localhost:3000
+
+2. Sur le Tableau de bord :
+   a. Allez dans l'onglet "Profil Candidat" :
+      - Renseignez votre Nom, Email, Telephone, Ville, Annees d'experience,
+        Pretention salariale, Diplome et Pitch.
+      - Dans la section "Matrice des Competences" :
+        Ajoutez vos competences cles et le nombre d'annees d'experience
+        (ex : Python: 3 ans, Excel: 5 ans, SQL: 4 ans, Vente: 2 ans, etc.).
+        -> Le bot injecte automatiquement ces annees exactes lorsqu'un formulaire
+           de candidature demande "Combien d'annees d'experience sur X ?".
+      - Cliquez sur "Enregistrer mon profil et mes competences".
+
+   b. Allez dans l'onglet "Campagnes & Quotas" :
+      - Adaptez les mots-cles de recherche a votre metier cible
+        (ex : "Data Analyst", "Developpeur Python", "Comptable", "Chef de projet"...).
+      - Cliquez sur "Enregistrer les parametres".
+
+   c. Sur l'accueil du Dashboard, cliquez sur "Demarrer" pour lancer :
+      - Candidatures Easy Apply (LinkedIn)
+      - Candidatures HelloWork (1-Clic CDI)
+      - Prospection B2B BayIIn Maroc
+      - Reseautage Recruteurs
+
+
+--------------------------------------------------------------------------------
+ UTILISATION SUR MAC (APPLE SILICON M1/M2/M3/M4 & INTEL)
+--------------------------------------------------------------------------------
+L'orchestrateur est 100% compatible avec Apple Mac :
+1. Sur Mac, utilisez les fichiers ".command" au lieu des ".bat" :
+   - Installation : Double-cliquez sur "0-Installation-Mac.command"
+   - Connexion    : Double-cliquez sur "1-Connexion-LinkedIn-Mac.command"
+   - Lancement    : Double-cliquez sur "3-Lancer-Orchestrator-Mac.command"
+2. Ou via le Terminal Mac :
+   - npm install && npx playwright install chromium
+   - npm run auth
+   - npm run dashboard
+
+--------------------------------------------------------------------------------
+ SECURITE & CONFIDENTIALITE
+--------------------------------------------------------------------------------
+* Vos mots de passe ne sont JAMAIS stockes ni transmis.
+* Seuls les cookies de session temporaires sont enregistres localement sur votre machine.
+* Le bot utilise des delais gaussiens humains (Box-Muller) et des quotas securises
+  (15 max par session) pour eviter tout risque de blocage par les plateformes.
+================================================================================
+
