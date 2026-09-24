@@ -596,8 +596,33 @@ export const CONFIG: OrchestratorConfig = {
 
 const USER_CONFIG_FILE = path.resolve(process.cwd(), 'data', 'user_config.json');
 
+export function syncEnvFile(entries: Record<string, string | number>): void {
+  try {
+    const envPath = path.resolve(process.cwd(), '.env');
+    if (!fs.existsSync(envPath)) return;
+    let content = fs.readFileSync(envPath, 'utf-8');
+    for (const [key, val] of Object.entries(entries)) {
+      const regex = new RegExp(`^${key}=.*$`, 'm');
+      if (regex.test(content)) {
+        content = content.replace(regex, `${key}=${val}`);
+      } else {
+        content += `\n${key}=${val}`;
+      }
+    }
+    fs.writeFileSync(envPath, content, 'utf-8');
+  } catch {
+    // Non bloquant
+  }
+}
+
 export function loadUserConfig(): void {
   try {
+    // Rechargement à chaud de .env pour capter d'éventuelles modifications manuelles
+    const envPath = path.resolve(process.cwd(), '.env');
+    if (fs.existsSync(envPath)) {
+      dotenv.config({ path: envPath, override: true });
+    }
+
     if (fs.existsSync(USER_CONFIG_FILE)) {
       const raw = fs.readFileSync(USER_CONFIG_FILE, 'utf-8');
       const data = JSON.parse(raw);
@@ -614,6 +639,20 @@ export function loadUserConfig(): void {
       if (data.jobSearch) Object.assign(CONFIG.jobSearch, data.jobSearch);
       if (data.helloWork) Object.assign(CONFIG.helloWork, data.helloWork);
       if (data.networking) Object.assign(CONFIG.networking, data.networking);
+    }
+
+    // Si une variable d'environnement explicite est présente dans .env, elle est prioritaire
+    if (process.env.MAX_EASY_APPLY) {
+      CONFIG.quotas.maxEasyApplyPerSession = parseInt(process.env.MAX_EASY_APPLY, 10);
+    }
+    if (process.env.MAX_NETWORKING) {
+      CONFIG.quotas.maxNetworkingPerSession = parseInt(process.env.MAX_NETWORKING, 10);
+    }
+    if (process.env.MAX_OUTREACH) {
+      CONFIG.quotas.maxOutreachPerSession = parseInt(process.env.MAX_OUTREACH, 10);
+    }
+    if (process.env.MAX_HELLOWORK_APPLY) {
+      CONFIG.helloWork.quotas.maxApplyPerSession = parseInt(process.env.MAX_HELLOWORK_APPLY, 10);
     }
   } catch (err) {
     console.warn('Erreur chargement user_config.json:', err);
@@ -663,9 +702,41 @@ export function saveUserConfig(overrides: Partial<OrchestratorConfig>): void {
       }
       Object.assign(CONFIG.candidate, overrides.candidate);
     }
-    if (overrides.quotas) Object.assign(CONFIG.quotas, overrides.quotas);
+
+    const envUpdates: Record<string, string | number> = {};
+
+    if (overrides.quotas) {
+      Object.assign(CONFIG.quotas, overrides.quotas);
+      if (overrides.quotas.maxEasyApplyPerSession !== undefined) {
+        process.env.MAX_EASY_APPLY = String(overrides.quotas.maxEasyApplyPerSession);
+        envUpdates['MAX_EASY_APPLY'] = overrides.quotas.maxEasyApplyPerSession;
+      }
+      if (overrides.quotas.maxNetworkingPerSession !== undefined) {
+        process.env.MAX_NETWORKING = String(overrides.quotas.maxNetworkingPerSession);
+        envUpdates['MAX_NETWORKING'] = overrides.quotas.maxNetworkingPerSession;
+      }
+      if (overrides.quotas.maxOutreachPerSession !== undefined) {
+        process.env.MAX_OUTREACH = String(overrides.quotas.maxOutreachPerSession);
+        envUpdates['MAX_OUTREACH'] = overrides.quotas.maxOutreachPerSession;
+      }
+    }
+
+    if (overrides.helloWork) {
+      if (overrides.helloWork.quotas?.maxApplyPerSession !== undefined) {
+        const hwQ = overrides.helloWork.quotas.maxApplyPerSession;
+        if (!CONFIG.helloWork.quotas) CONFIG.helloWork.quotas = { maxApplyPerSession: hwQ };
+        else CONFIG.helloWork.quotas.maxApplyPerSession = hwQ;
+        process.env.MAX_HELLOWORK_APPLY = String(hwQ);
+        envUpdates['MAX_HELLOWORK_APPLY'] = hwQ;
+      }
+      Object.assign(CONFIG.helloWork, overrides.helloWork);
+    }
+
+    if (Object.keys(envUpdates).length > 0) {
+      syncEnvFile(envUpdates);
+    }
+
     if (overrides.jobSearch) Object.assign(CONFIG.jobSearch, overrides.jobSearch);
-    if (overrides.helloWork) Object.assign(CONFIG.helloWork, overrides.helloWork);
     if (overrides.networking) Object.assign(CONFIG.networking, overrides.networking);
   } catch (err) {
     console.error('Erreur sauvegarde user_config.json:', err);

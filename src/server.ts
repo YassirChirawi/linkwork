@@ -2,7 +2,7 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { EventEmitter } from 'events';
-import { CONFIG, saveUserConfig } from './config.js';
+import { CONFIG, saveUserConfig, loadUserConfig } from './config.js';
 import { historyManager } from './utils/history.js';
 import { authenticateInteractive, authenticateHelloWorkInteractive } from './auth.js';
 import { EasyApplyModule } from './modules/easyApply.js';
@@ -205,7 +205,10 @@ const server = http.createServer(async (req, res) => {
           delete overrides.geminiApiKey;
         }
         saveUserConfig(overrides);
-        broadcastLog('success', 'Configuration mise à jour et sauvegardée avec succès !');
+        broadcastLog(
+          'success',
+          `Configuration mise à jour et sauvegardée ! (Quota Easy Apply = ${CONFIG.quotas.maxEasyApplyPerSession}, HelloWork = ${CONFIG.helloWork.quotas.maxApplyPerSession})`
+        );
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(
           JSON.stringify({
@@ -526,6 +529,19 @@ const server = http.createServer(async (req, res) => {
         const payload = body ? JSON.parse(body) : {};
         const moduleType = payload.module || 'easyApply';
 
+        // Rechargement immédiat de la configuration la plus fraîche
+        loadUserConfig();
+
+        // Prise en compte immédiate d'un quota explicite passé lors du clic de lancement
+        const customQuota = payload.maxApply || payload.options?.maxApply;
+        if (customQuota && typeof customQuota === 'number') {
+          if (moduleType === 'easyApply') {
+            saveUserConfig({ quotas: { maxEasyApplyPerSession: customQuota } as any });
+          } else if (moduleType === 'helloWork') {
+            saveUserConfig({ helloWork: { quotas: { maxApplyPerSession: customQuota } } as any });
+          }
+        }
+
         // Validation de session selon la plateforme
         if (moduleType === 'helloWork') {
           if (!isHelloWorkSessionValid(CONFIG.helloWorkSessionStoragePath)) {
@@ -538,13 +554,14 @@ const server = http.createServer(async (req, res) => {
             return;
           }
 
-          broadcastLog('system', 'Lancement du module : HELLOWORK');
-          new HelloWorkModule(undefined, payload.options).run().catch((err) => {
+          const effectiveQuota = customQuota || CONFIG.helloWork.quotas.maxApplyPerSession;
+          broadcastLog('system', `Lancement du module HELLOWORK (Quota actif : ${effectiveQuota} candidatures max)`);
+          new HelloWorkModule(undefined, { maxApply: effectiveQuota, ...payload.options }).run().catch((err) => {
             broadcastLog('error', `Erreur HelloWork : ${(err as Error).message}`);
           });
 
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ success: true, module: 'helloWork' }));
+          res.end(JSON.stringify({ success: true, module: 'helloWork', quota: effectiveQuota }));
           return;
         }
 
@@ -555,14 +572,15 @@ const server = http.createServer(async (req, res) => {
           return;
         }
 
-        broadcastLog('system', `Lancement du module : ${moduleType.toUpperCase()}`);
-
         // Lancement en arrière-plan selon le module sélectionné
         if (moduleType === 'easyApply') {
-          new EasyApplyModule().run().catch((err) => {
+          const effectiveQuota = customQuota || CONFIG.quotas.maxEasyApplyPerSession;
+          broadcastLog('system', `Lancement du module EASY APPLY (Quota actif : ${effectiveQuota} candidatures max)`);
+          new EasyApplyModule(undefined, { maxApply: effectiveQuota, ...payload.options }).run().catch((err) => {
             broadcastLog('error', `Erreur Easy Apply : ${(err as Error).message}`);
           });
         } else if (moduleType === 'networking') {
+          broadcastLog('system', `Lancement du module : NETWORKING`);
           const netHelper = new NetworkingModule(undefined, {
             targetCategory: payload.targetCategory || payload.options?.targetCategory || 'general',
             customQuery: payload.customQuery || payload.options?.customQuery,

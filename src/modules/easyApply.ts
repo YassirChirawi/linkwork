@@ -1,7 +1,7 @@
 import { Page, Locator } from 'playwright';
 import fs from 'fs';
 import path from 'path';
-import { CONFIG } from '../config.js';
+import { CONFIG, loadUserConfig } from '../config.js';
 import { createStealthBrowser } from '../utils/browser.js';
 import { humanDelay, humanType, humanScroll, humanMoveAndClick } from '../utils/humanize.js';
 import { log, promptSemiAutoChoice, SemiAutoDecision } from '../utils/cli.js';
@@ -16,11 +16,18 @@ export interface EasyApplyStats {
   failed: number;
 }
 
+export interface EasyApplyRunOptions {
+  maxApply?: number;
+  keywords?: string;
+  location?: string;
+}
+
 /**
  * Module d'automatisation des candidatures simplifiées (Easy Apply).
  */
 export class EasyApplyModule {
   private page!: Page;
+  private options: EasyApplyRunOptions;
   private stats: EasyApplyStats = {
     scanned: 0,
     applied: 0,
@@ -28,15 +35,22 @@ export class EasyApplyModule {
     failed: 0,
   };
 
-  constructor(page?: Page) {
+  constructor(page?: Page, options: EasyApplyRunOptions = {}) {
     if (page) this.page = page;
+    loadUserConfig();
+    this.options = {
+      maxApply: options.maxApply || CONFIG.quotas.maxEasyApplyPerSession,
+      keywords: options.keywords || CONFIG.jobSearch.keywords,
+      location: options.location || CONFIG.jobSearch.location,
+    };
   }
 
   /**
    * Point d'entrée principal du module Easy Apply.
    */
   public async run(): Promise<EasyApplyStats> {
-    log.step('Démarrage du Module Candidatures (Easy Apply)...');
+    const targetQuota = this.options.maxApply || CONFIG.quotas.maxEasyApplyPerSession;
+    log.step(`Démarrage du Module Candidatures (Easy Apply) - Quota cible : ${targetQuota}...`);
 
     // Vérification préalable de la présence du CV
     this.verifyResumeFile();
@@ -58,7 +72,7 @@ export class EasyApplyModule {
       let hasMoreJobs = true;
       let currentPage = 1;
 
-      while (hasMoreJobs && this.stats.applied < CONFIG.quotas.maxEasyApplyPerSession) {
+      while (hasMoreJobs && this.stats.applied < targetQuota) {
         log.info(`Analyse de la page de résultats n°${currentPage}...`);
         await humanScroll(this.page, { totalDistance: 800, scrollSteps: 6 });
 
@@ -66,8 +80,8 @@ export class EasyApplyModule {
         log.info(`Nombre d'offres détectées sur cette page : ${cards.length}`);
 
         for (let i = 0; i < cards.length; i++) {
-          if (this.stats.applied >= CONFIG.quotas.maxEasyApplyPerSession) {
-            log.success(`Quota de session atteint : ${this.stats.applied} candidatures envoyées !`);
+          if (this.stats.applied >= targetQuota) {
+            log.success(`Quota de session atteint : ${this.stats.applied} / ${targetQuota} candidatures envoyées !`);
             break;
           }
 
@@ -86,7 +100,7 @@ export class EasyApplyModule {
           );
         }
 
-        if (this.stats.applied >= CONFIG.quotas.maxEasyApplyPerSession) break;
+        if (this.stats.applied >= targetQuota) break;
 
         // Tenter de passer à la page suivante
         hasMoreJobs = await this.goToNextPage();
@@ -125,8 +139,8 @@ export class EasyApplyModule {
   private async navigateToJobSearch(): Promise<void> {
     const baseUrl = 'https://www.linkedin.com/jobs/search/';
     const params = new URLSearchParams({
-      keywords: CONFIG.jobSearch.keywords,
-      location: CONFIG.jobSearch.location,
+      keywords: this.options.keywords || CONFIG.jobSearch.keywords,
+      location: this.options.location || CONFIG.jobSearch.location,
       f_AL: 'true', // Filtre Candidature simplifiée uniquement
       sortBy: 'R', // Pertinence
     });

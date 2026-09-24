@@ -139,7 +139,7 @@
           <div class="kpi-progress">
             <div class="kpi-bar" style="width: 70%;"></div>
           </div>
-          <span class="kpi-sub">Quota : 15 / session max</span>
+          <span class="kpi-sub" id="kpi-sub-quota">Quota : 15 / session max</span>
         </div>
 
         <div class="kpi-card" id="kpi-invites">
@@ -196,14 +196,20 @@
                 <h4>Candidatures Easy Apply Semi-Auto</h4>
                 <p>Recherche ciblée Full Stack / Java / React, remplissage automatique basé sur votre CV, validation semi-auto.</p>
                 <div class="module-meta">
-                  <span>Quota : 15</span>
+                  <span id="badge-quota-easy">Quota : 15</span>
                   <span>Filtre : Candidature Simplifiée</span>
                   <span>CV : Détecté automatiquement</span>
                 </div>
               </div>
-              <button class="btn-module-run" id="btn-run-easy-apply" onclick="triggerRun('easyApply')">
-                Démarrer
-              </button>
+              <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-muted);">
+                  <label for="quick-quota-easy">Quota :</label>
+                  <input type="number" id="quick-quota-easy" value="15" min="1" max="100" style="width: 52px; padding: 4px 6px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid var(--border-subtle); color: var(--color-cyan); font-weight: 700; text-align: center;" onchange="updateQuickQuota('easyApply', this.value)">
+                </div>
+                <button class="btn-module-run" id="btn-run-easy-apply" onclick="triggerRun('easyApply')">
+                  Démarrer
+                </button>
+              </div>
             </div>
 
             <!-- Module HelloWork 1-Clic -->
@@ -213,15 +219,21 @@
                 <h4>Candidatures HelloWork (1 Clic CDI)</h4>
                 <p>Postulation automatique aux offres CDI Full Stack Java Spring React à Paris/IDF. Filtrage strict anti-stage et injection automatique du CV + pitch.</p>
                 <div class="module-meta">
+                  <span id="badge-quota-hw">Quota : 15</span>
                   <span>HelloWork France</span>
                   <span>CDI Paris / IDF</span>
-                  <span>Pitch Bac+5 BNP</span>
                   <span>Filtre Anti-Stage</span>
                 </div>
               </div>
-              <button class="btn-module-run" id="btn-run-hellowork" onclick="triggerRun('helloWork')">
-                Démarrer
-              </button>
+              <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-muted);">
+                  <label for="quick-quota-hw">Quota :</label>
+                  <input type="number" id="quick-quota-hw" value="15" min="1" max="100" style="width: 52px; padding: 4px 6px; border-radius: 4px; background: rgba(0,0,0,0.4); border: 1px solid var(--border-subtle); color: var(--color-emerald); font-weight: 700; text-align: center;" onchange="updateQuickQuota('helloWork', this.value)">
+                </div>
+                <button class="btn-module-run" id="btn-run-hellowork" onclick="triggerRun('helloWork')">
+                  Démarrer
+                </button>
+              </div>
             </div>
 
             <!-- Module Talent Acquisition & Recruteurs RH -->

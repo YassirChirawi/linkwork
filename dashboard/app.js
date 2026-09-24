@@ -407,14 +407,68 @@ function updateKpisFromHistory() {
 }
 
 // ==================== DÉCLENCHEMENT DES MODULES ====================
+// ==================== GESTION DYNAMIQUE DES QUOTAS ====================
+async function updateQuickQuota(moduleName, val) {
+  const num = parseInt(val, 10);
+  if (isNaN(num) || num < 1) return;
+
+  if (moduleName === 'easyApply') {
+    const qEasy = document.getElementById('q-easyapply');
+    if (qEasy) qEasy.value = num;
+    const quickEasy = document.getElementById('quick-quota-easy');
+    if (quickEasy) quickEasy.value = num;
+    const badgeEasy = document.getElementById('badge-quota-easy');
+    if (badgeEasy) badgeEasy.innerText = `Quota : ${num}`;
+    const kpiSub = document.getElementById('kpi-sub-quota');
+    if (kpiSub) kpiSub.innerText = `Quota : ${num} / session max`;
+
+    // Sauvegarde en tâche de fond immédiate
+    fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quotas: { maxEasyApplyPerSession: num } }),
+    }).catch(() => null);
+  } else if (moduleName === 'helloWork') {
+    const hwQuota = document.getElementById('hw-quota');
+    if (hwQuota) hwQuota.value = num;
+    const quickHw = document.getElementById('quick-quota-hw');
+    if (quickHw) quickHw.value = num;
+    const badgeHw = document.getElementById('badge-quota-hw');
+    if (badgeHw) badgeHw.innerText = `Quota : ${num}`;
+
+    // Sauvegarde en tâche de fond immédiate
+    fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ helloWork: { quotas: { maxApplyPerSession: num } } }),
+    }).catch(() => null);
+  }
+}
+
+// ==================== DÉCLENCHEMENT DES MODULES ====================
 async function triggerRun(moduleName, options = {}) {
-  appendLog(`Demande d'exécution du module : ${moduleName.toUpperCase()}...`, "system");
+  // Récupération dynamique et explicite du quota affiché à l'écran
+  let runQuota = options.maxApply;
+  if (!runQuota) {
+    if (moduleName === 'easyApply') {
+      runQuota = parseInt(document.getElementById('quick-quota-easy')?.value || document.getElementById('q-easyapply')?.value || '15', 10);
+    } else if (moduleName === 'helloWork') {
+      runQuota = parseInt(document.getElementById('quick-quota-hw')?.value || document.getElementById('hw-quota')?.value || '15', 10);
+    }
+  }
+
+  appendLog(`Demande d'exécution du module : ${moduleName.toUpperCase()} (Quota session : ${runQuota || 'Standard'})...`, "system");
+
+  const mergedOptions = {
+    ...options,
+    ...(runQuota ? { maxApply: runQuota } : {}),
+  };
 
   try {
     const res = await fetch('/api/run', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ module: moduleName, ...options, options }),
+      body: JSON.stringify({ module: moduleName, maxApply: runQuota, options: mergedOptions }),
     });
 
     const data = await res.json();
@@ -424,7 +478,7 @@ async function triggerRun(moduleName, options = {}) {
       return;
     }
 
-    appendLog(`Module ${moduleName} démarré avec succès en arrière-plan.`, "success");
+    appendLog(`Module ${moduleName} démarré avec succès (Quota effectif : ${data.quota || runQuota || 'OK'}).`, "success");
 
     if (moduleName === 'humanSimulation') {
       const stopBtn = document.getElementById('btn-stop-simulation');
@@ -706,7 +760,20 @@ async function loadRemoteConfig() {
       const qEasy = document.getElementById('q-easyapply');
       const qNet = document.getElementById('q-networking');
       const qOut = document.getElementById('q-outreach');
-      if (qEasy && data.quotas.maxEasyApplyPerSession) qEasy.value = data.quotas.maxEasyApplyPerSession;
+      const quickEasy = document.getElementById('quick-quota-easy');
+      const badgeEasy = document.getElementById('badge-quota-easy');
+      const kpiSub = document.getElementById('kpi-sub-quota');
+
+      if (data.quotas.maxEasyApplyPerSession) {
+        const val = data.quotas.maxEasyApplyPerSession;
+        if (qEasy) {
+          qEasy.value = val;
+          qEasy.oninput = () => updateQuickQuota('easyApply', qEasy.value);
+        }
+        if (quickEasy) quickEasy.value = val;
+        if (badgeEasy) badgeEasy.innerText = `Quota : ${val}`;
+        if (kpiSub) kpiSub.innerText = `Quota : ${val} / session max`;
+      }
       if (qNet && data.quotas.maxNetworkingPerSession) qNet.value = data.quotas.maxNetworkingPerSession;
       if (qOut && data.quotas.maxOutreachPerSession) qOut.value = data.quotas.maxOutreachPerSession;
     }
@@ -725,10 +792,21 @@ async function loadRemoteConfig() {
       const hwLoc = document.getElementById('hw-location');
       const hwContract = document.getElementById('hw-contract');
       const hwQuota = document.getElementById('hw-quota');
+      const quickHw = document.getElementById('quick-quota-hw');
+      const badgeHw = document.getElementById('badge-quota-hw');
+
       if (hwKw && data.helloWork.keywords) hwKw.value = data.helloWork.keywords;
       if (hwLoc && data.helloWork.location) hwLoc.value = data.helloWork.location;
       if (hwContract && data.helloWork.contractTypes?.[0]) hwContract.value = data.helloWork.contractTypes[0];
-      if (hwQuota && data.helloWork.quotas?.maxApplyPerSession) hwQuota.value = data.helloWork.quotas.maxApplyPerSession;
+      if (data.helloWork.quotas?.maxApplyPerSession) {
+        const val = data.helloWork.quotas.maxApplyPerSession;
+        if (hwQuota) {
+          hwQuota.value = val;
+          hwQuota.oninput = () => updateQuickQuota('helloWork', hwQuota.value);
+        }
+        if (quickHw) quickHw.value = val;
+        if (badgeHw) badgeHw.innerText = `Quota : ${val}`;
+      }
     }
 
     if (data.candidate) {
@@ -1669,5 +1747,14 @@ window.copyExtractedPitch = copyExtractedPitch;
 window.copyBooleanQuery = copyBooleanQuery;
 window.triggerDirectApply = triggerDirectApply;
 window.switchCVSubtab = switchCVSubtab;
+window.updateQuickQuota = updateQuickQuota;
+
+// Raccourci Lancer Campagne du Header
+document.addEventListener('DOMContentLoaded', () => {
+  const quickRunBtn = document.getElementById('btn-quick-run');
+  if (quickRunBtn) {
+    quickRunBtn.onclick = () => triggerRun('easyApply');
+  }
+});
 
 
