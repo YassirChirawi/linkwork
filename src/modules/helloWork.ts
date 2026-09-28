@@ -7,6 +7,7 @@ import { log } from '../utils/cli.js';
 import { historyManager } from '../utils/history.js';
 import { JobScorer } from '../utils/jobScorer.js';
 import { SmartFormSolver } from '../utils/formSolver.js';
+import { CandidateQuestionsManager } from '../utils/questionsManager.js';
 
 export interface HelloWorkStats {
   scanned: number;
@@ -143,6 +144,11 @@ export class HelloWorkModule {
 
     log.step('Bilan de la session Candidatures HelloWork :');
     console.table(this.stats);
+
+    // Finalisation du tour : enregistrement et génération des questions à remplir par le candidat
+    CandidateQuestionsManager.finalizeTour('HelloWork');
+    CandidateQuestionsManager.displayTourQuestionsCli();
+
     return this.stats;
   }
 

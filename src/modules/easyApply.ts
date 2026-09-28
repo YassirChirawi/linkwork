@@ -8,6 +8,7 @@ import { log, promptSemiAutoChoice, SemiAutoDecision } from '../utils/cli.js';
 import { historyManager } from '../utils/history.js';
 import { JobScorer } from '../utils/jobScorer.js';
 import { SmartFormSolver } from '../utils/formSolver.js';
+import { CandidateQuestionsManager } from '../utils/questionsManager.js';
 
 export interface EasyApplyStats {
   scanned: number;
@@ -117,6 +118,11 @@ export class EasyApplyModule {
 
     log.step('Bilan de la session Easy Apply :');
     console.table(this.stats);
+
+    // Finalisation du tour : enregistrement et génération des questions à remplir par le candidat
+    CandidateQuestionsManager.finalizeTour('EasyApply');
+    CandidateQuestionsManager.displayTourQuestionsCli();
+
     return this.stats;
   }
 

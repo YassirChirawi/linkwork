@@ -3,6 +3,7 @@ import { CONFIG } from '../config.js';
 import { log } from './cli.js';
 import { humanType, humanDelay } from './humanize.js';
 import { CVExtractor } from './cvExtractor.js';
+import { CandidateQuestionsManager } from './questionsManager.js';
 
 export interface FormSolverResult {
   handled: boolean;
@@ -128,8 +129,11 @@ export class SmartFormSolver {
       source = 'profile';
     }
     // 8. Questions d'années d'expérience (compétence spécifique ou expérience globale)
-    else if (/(?:combien|how\s*many|years?|ans\b|expérience|experience|ancienneté)/i.test(lowerLabel)) {
-      const years = this.resolveYearsOfExperience(lowerLabel);
+    else if (
+      /(?:combien\s*d['’]ann[ée]+e?s?|combien\s*d['’]ans?|how\s*many\s*years?)/i.test(lowerLabel) ||
+      /(?:combien|how\s*many|years?|ans\b|expérience|experience|ancienneté)/i.test(lowerLabel)
+    ) {
+      const years = this.resolveYearsOfExperience(lowerLabel, labelText, jobTitle);
       valueToType = String(years);
       source = 'skills_map';
     }
@@ -141,6 +145,14 @@ export class SmartFormSolver {
         valueToType = 'Oui';
       }
       source = 'inferred';
+      CandidateQuestionsManager.recordQuestion({
+        questionText: labelText,
+        category: 'boolean',
+        botAnswer: valueToType,
+        fallbackApplied: false,
+        source: 'inferred',
+        jobTitle,
+      });
     }
     // 10. Questions de motivation / Pitch ouvert / Textareas
     else if (
@@ -153,8 +165,12 @@ export class SmartFormSolver {
     // 11. Repli par défaut intelligent et sécurisé
     else {
       if (isNumericExpected) {
-        // Toujours un nombre positif réaliste pour éviter le rejet ATS Knockout
-        valueToType = String(Math.max(2, Math.round((CONFIG.candidate.experienceYears || 4) * 0.75)));
+        // Si question relative à une durée ou années d'expérience -> 3 par défaut selon consigne stricte
+        if (/(?:combien|années?|ans\b|years?|durée|duration|expérience|experience)/i.test(lowerLabel)) {
+          valueToType = '3';
+        } else {
+          valueToType = String(Math.max(2, Math.round((CONFIG.candidate.experienceYears || 4) * 0.75)));
+        }
         source = 'inferred';
       } else {
         valueToType = CONFIG.candidate.summaryPitch;
@@ -162,10 +178,10 @@ export class SmartFormSolver {
       }
     }
 
-    // Normalisation absolue pour les champs numériques
+    // Normalisation absolue pour les champs numériques (défaut 3)
     if (isNumericExpected) {
       const cleaned = valueToType.replace(/\D+/g, '');
-      valueToType = cleaned || '4';
+      valueToType = cleaned || '3';
     }
 
     log.human(`[SmartForm] "${labelText.slice(0, 42)}" -> Saisie: "${valueToType.slice(0, 32)}" (${source})`);
@@ -191,12 +207,22 @@ export class SmartFormSolver {
     const radios = await fieldset.locator('label, div[role="radio"], input[type="radio"]').all();
     if (radios.length === 0) return false;
 
-    // Détermination de la polarité attendue
     let targetChoice: 'yes' | 'no' = 'yes';
-    if (this.isNegativePolarityQuestion(lowerLegend)) {
-      targetChoice = 'no';
+    // Vérification si le candidat a déjà répondu spécifiquement à cette question
+    const candidateSaved = CandidateQuestionsManager.getSavedAnswer(legend);
+    if (candidateSaved) {
+      if (/non|no|faux|false/i.test(candidateSaved)) {
+        targetChoice = 'no';
+      } else if (/oui|yes|vrai|true/i.test(candidateSaved)) {
+        targetChoice = 'yes';
+      }
     } else {
-      targetChoice = 'yes';
+      // Détermination de la polarité attendue
+      if (this.isNegativePolarityQuestion(lowerLegend)) {
+        targetChoice = 'no';
+      } else {
+        targetChoice = 'yes';
+      }
     }
 
     const yesPatterns = ['oui', 'yes', 'vrai', 'true', 'd’accord', "j'accepte", 'autorisé', 'permis', 'bac+5'];
@@ -213,6 +239,15 @@ export class SmartFormSolver {
         log.human(`[SmartForm Radio] "${legend.slice(0, 40)}" -> Sélection : "${text}"`);
         await radio.click({ force: true }).catch(() => null);
         await humanDelay(150, 350);
+
+        CandidateQuestionsManager.recordQuestion({
+          questionText: legend,
+          category: 'boolean',
+          botAnswer: targetChoice === 'yes' ? 'Oui' : 'Non',
+          fallbackApplied: false,
+          source: candidateSaved ? 'candidate_saved' : 'inferred',
+        });
+
         return true;
       }
     }
@@ -222,6 +257,15 @@ export class SmartFormSolver {
     const text = (await firstOption.innerText().catch(() => '')).trim();
     log.human(`[SmartForm Radio Fallback] Sélection : "${text}"`);
     await firstOption.click({ force: true }).catch(() => null);
+
+    CandidateQuestionsManager.recordQuestion({
+      questionText: legend,
+      category: 'boolean',
+      botAnswer: text,
+      fallbackApplied: true,
+      source: 'inferred',
+    });
+
     return true;
   }
 
@@ -244,7 +288,7 @@ export class SmartFormSolver {
 
     // 1. Déroulant d'années d'expérience
     if (/(?:combien|how\s*many|years|ans\b|expérience|experience|ancienneté)/i.test(lowerLabel)) {
-      const targetYears = this.resolveYearsOfExperience(lowerLabel);
+      const targetYears = this.resolveYearsOfExperience(lowerLabel, selectText);
       
       // A. Recherche d'un match exact sur le nombre
       for (const opt of options) {
@@ -425,7 +469,7 @@ export class SmartFormSolver {
 
         // Si question d'expérience
         if (!selected && /(?:combien|years|ans\b|expérience|experience)/i.test(lower)) {
-          const targetExp = this.resolveYearsOfExperience(lower);
+          const targetExp = this.resolveYearsOfExperience(lower, questionLabel);
           for (const item of items) {
             const txt = (await item.innerText().catch(() => '')).trim();
             if (new RegExp(`\\b${targetExp}\\b`, 'i').test(txt)) {
@@ -533,36 +577,123 @@ export class SmartFormSolver {
 
   /**
    * Calcule les années d'expérience avec précision selon le libellé de la question.
+   * Règle stricte : Les questions qui commencent par "combien d'année" etc. doivent être
+   * répondues par un chiffre tiré des skills (matrice candidat/CV/réponses enregistrées), sinon mettre 3 !
    */
-  public static resolveYearsOfExperience(lowerLabel: string): number {
-    const candidateExp = CONFIG.candidate.experienceYears || 4;
+  public static resolveYearsOfExperience(
+    lowerLabel: string,
+    rawLabel: string = '',
+    jobTitle: string = '',
+    company: string = ''
+  ): number {
+    const questionText = rawLabel || lowerLabel;
 
-    // A. Question d'expérience globale ou totale
-    if (
-      /(?:totale?|globale?|overall|total|entière|all)\s*(?:years?|ans?|expérience|experience)|(?:years?|ans?)\s*(?:d['’]expérience\s*)?(?:totale?|globale?|overall)|d['’]expérience\s*professionnelle?\s*globale/i.test(lowerLabel) ||
-      /(?:combien\s*d['’]années\s*d['’]expérience\s*(?:avez-vous|au\s*total)?|how\s*many\s*years\s*of\s*(?:total\s*)?experience\s*do\s*you\s*have)\s*[\?\:\.]?\s*$/i.test(lowerLabel)
-    ) {
-      return candidateExp;
+    // 1. Vérification préalable : Le candidat a-t-il déjà répondu ou validé cette question ?
+    const savedAnswer = CandidateQuestionsManager.getSavedAnswer(questionText);
+    if (savedAnswer !== null) {
+      const parsed = parseInt(savedAnswer.replace(/\D+/g, ''), 10);
+      if (!isNaN(parsed)) {
+        return parsed;
+      }
     }
 
-    // B. Recherche directe dans la matrice du candidat ou du CV
+    // 2. Recherche directe d'une compétence connue dans le libellé complet
     const matched = this.findMatchingSkill(lowerLabel);
     if (matched) {
+      CandidateQuestionsManager.recordQuestion({
+        questionText,
+        category: 'years_skill',
+        skillName: matched.name,
+        botAnswer: String(matched.years),
+        fallbackApplied: false,
+        source: 'skills_map',
+        jobTitle,
+        company,
+      });
       return matched.years;
     }
 
-    // C. Extraction du mot-clé de la compétence après un mot de liaison
-    const keywordMatch = lowerLabel.match(/(?:avec|en|sur|with|using|in|sur le logiciel|sur l'outil)\s+([a-zA-Z0-9#+.\s-]{2,25}?)(?:\?|\:|\.|\(|\s*\(|$)/i);
+    // 3. Extraction du mot-clé de la compétence après un mot de liaison / préposition
+    const keywordMatch = lowerLabel.match(
+      /(?:avec|en|sur|with|using|in|pour|de|d['’]|sur le logiciel|sur l['’]outil|technologie|outil|framework|langage|librairie)\s+([a-zA-Z0-9#+.\s-]{2,30}?)(?:\?|\:|\.|\(|\s*\(|$)/i
+    );
     if (keywordMatch && keywordMatch[1]) {
       const extractedTerm = keywordMatch[1].trim();
       const extractedSkill = this.findMatchingSkill(extractedTerm);
       if (extractedSkill) {
+        CandidateQuestionsManager.recordQuestion({
+          questionText,
+          category: 'years_skill',
+          skillName: extractedSkill.name,
+          botAnswer: String(extractedSkill.years),
+          fallbackApplied: false,
+          source: 'skills_map',
+          jobTitle,
+          company,
+        });
         return extractedSkill.years;
       }
+
+      // Compétence identifiée mais NON présente dans les skills :
+      // Règle explicite demandée par l'utilisateur : sinon mettre 3 !
+      CandidateQuestionsManager.recordQuestion({
+        questionText,
+        category: 'years_skill',
+        skillName: extractedTerm,
+        botAnswer: '3',
+        fallbackApplied: true,
+        source: 'default_fallback_3',
+        jobTitle,
+        company,
+      });
+      return 3;
     }
 
-    // D. Valeur réaliste positive par défaut (toujours entre 2 et 5 ans, JAMAIS 0)
-    return Math.max(2, Math.min(5, Math.round(candidateExp * 0.75)));
+    // 4. Question d'expérience globale ou totale
+    if (
+      /(?:totale?|globale?|overall|total|entière|all)\s*(?:years?|ans?|expérience|experience)|(?:years?|ans?)\s*(?:d['’]expérience\s*)?(?:totale?|globale?|overall)|d['’]expérience\s*professionnelle?\s*globale/i.test(
+        lowerLabel
+      ) ||
+      /(?:combien\s*d['’]années\s*d['’]expérience\s*(?:avez-vous|au\s*total)?|how\s*many\s*years\s*of\s*(?:total\s*)?experience\s*do\s*you\s*have)\s*[\?\:\.]?\s*$/i.test(
+        lowerLabel
+      )
+    ) {
+      const expOverall =
+        (CONFIG.candidate.skillsMap &&
+          (CONFIG.candidate.skillsMap['expérience'] || CONFIG.candidate.skillsMap['experience'])) ||
+        CONFIG.candidate.experienceYears ||
+        4;
+      CandidateQuestionsManager.recordQuestion({
+        questionText,
+        category: 'years_overall',
+        botAnswer: String(expOverall),
+        fallbackApplied: false,
+        source: 'profile',
+        jobTitle,
+        company,
+      });
+      return expOverall;
+    }
+
+    // 5. Questions commençant par "combien d'année", "how many years", etc. sans compétence identifiée dans les skills :
+    // Règle absolue demandée : mettre 3 !
+    const subjectMatch = lowerLabel.match(
+      /(?:combien\s*d['’]ann[ée]+e?s?|how\s*many\s*years?)\s*(?:d['’]expérience|de\s*travail|d['’]ancienneté)?\s*(?:avez-vous|avez\s*vous)?\s*(?:sur|en|avec|dans)?\s*(?:tant\s*que)?\s*([a-zA-Z0-9#+.\s-]{2,35}?)(?:\?|\:|\.|$)/i
+    );
+    const subjectTerm = subjectMatch && subjectMatch[1] ? subjectMatch[1].trim() : undefined;
+
+    CandidateQuestionsManager.recordQuestion({
+      questionText,
+      category: 'years_skill',
+      skillName: subjectTerm,
+      botAnswer: '3',
+      fallbackApplied: true,
+      source: 'default_fallback_3',
+      jobTitle,
+      company,
+    });
+
+    return 3;
   }
 
   /**

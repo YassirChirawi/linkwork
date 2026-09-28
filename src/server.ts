@@ -15,6 +15,7 @@ import { logEmitter } from './utils/events.js';
 import { resolvePendingSemiAuto } from './utils/cli.js';
 import { CVExtractor } from './utils/cvExtractor.js';
 import { JobHunter } from './utils/jobHunter.js';
+import { CandidateQuestionsManager } from './utils/questionsManager.js';
 
 export const serverEmitter = new EventEmitter();
 
@@ -81,6 +82,11 @@ logEmitter.on('simulation_progress', (data) => {
 
 historyManager.on('action_logged', (record) => {
   const payload = `event: action\ndata: ${JSON.stringify(record)}\n\n`;
+  sseClients.forEach((res) => res.write(payload));
+});
+
+logEmitter.on('questions_updated', (data) => {
+  const payload = `event: questions_updated\ndata: ${JSON.stringify(data)}\n\n`;
   sseClients.forEach((res) => res.write(payload));
 });
 
@@ -251,6 +257,95 @@ const server = http.createServer(async (req, res) => {
         res.end(JSON.stringify({ error: (err as Error).message }));
       }
     });
+    return;
+  }
+
+  // ==================== 3.85 QUESTIONS CANDIDAT & APPRENTISSAGE ====================
+
+  // A. Consultation des questions enregistrées
+  if (pathname === '/api/questions' && req.method === 'GET') {
+    CandidateQuestionsManager.syncFromFile();
+    const all = CandidateQuestionsManager.getAllQuestions();
+    const pending = CandidateQuestionsManager.getPendingQuestions();
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(
+      JSON.stringify({
+        success: true,
+        all,
+        pending,
+        pendingCount: pending.length,
+        totalCount: all.length,
+        markdownPath: 'QUESTIONS_A_REMPLIR.md',
+      })
+    );
+    return;
+  }
+
+  // B. Enregistrement des réponses du candidat
+  if (pathname === '/api/questions/answer' && req.method === 'POST') {
+    let body = '';
+    req.on('data', (chunk) => (body += chunk));
+    req.on('end', () => {
+      try {
+        const payload = JSON.parse(body || '{}');
+
+        // Réponse multiple en lot
+        if (payload.answers && typeof payload.answers === 'object') {
+          const count = CandidateQuestionsManager.answerMultiple(payload.answers);
+          broadcastLog('success', `💾 ${count} réponse(s) candidat enregistrée(s) ! Le bot sera plus précis au prochain tour.`);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(
+            JSON.stringify({
+              success: true,
+              updatedCount: count,
+              pendingCount: CandidateQuestionsManager.getPendingQuestions().length,
+            })
+          );
+          return;
+        }
+
+        // Réponse unique
+        if (payload.id && payload.answer !== undefined) {
+          const success = CandidateQuestionsManager.answerQuestion(payload.id, String(payload.answer));
+          broadcastLog('success', `💾 Réponse enregistrée pour "${payload.id}" : ${payload.answer}`);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(
+            JSON.stringify({
+              success,
+              pendingCount: CandidateQuestionsManager.getPendingQuestions().length,
+            })
+          );
+          return;
+        }
+
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Payload invalide : "id" et "answer" ou "answers" requis.' }));
+      } catch (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: (err as Error).message }));
+      }
+    });
+    return;
+  }
+
+  // C. Synchronisation depuis le fichier QUESTIONS_A_REMPLIR.md
+  if (pathname === '/api/questions/sync-file' && req.method === 'POST') {
+    try {
+      const resSync = CandidateQuestionsManager.syncFromFile();
+      broadcastLog('info', `🔄 Synchronisation Markdown : ${resSync.updatedCount} réponse(s) mise(s) à jour.`);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(
+        JSON.stringify({
+          success: true,
+          ...resSync,
+          pendingCount: CandidateQuestionsManager.getPendingQuestions().length,
+        })
+      );
+    } catch (err) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: (err as Error).message }));
+    }
     return;
   }
 
@@ -556,9 +651,20 @@ const server = http.createServer(async (req, res) => {
 
           const effectiveQuota = customQuota || CONFIG.helloWork.quotas.maxApplyPerSession;
           broadcastLog('system', `Lancement du module HELLOWORK (Quota actif : ${effectiveQuota} candidatures max)`);
-          new HelloWorkModule(undefined, { maxApply: effectiveQuota, ...payload.options }).run().catch((err) => {
-            broadcastLog('error', `Erreur HelloWork : ${(err as Error).message}`);
-          });
+          new HelloWorkModule(undefined, { maxApply: effectiveQuota, ...payload.options })
+            .run()
+            .then(() => {
+              const pending = CandidateQuestionsManager.getPendingQuestions();
+              if (pending.length > 0) {
+                broadcastLog(
+                  'system',
+                  `📋 Tour HelloWork terminé : ${pending.length} question(s) à préciser dans l'onglet "Questions Candidat" ou dans QUESTIONS_A_REMPLIR.md.`
+                );
+              }
+            })
+            .catch((err) => {
+              broadcastLog('error', `Erreur HelloWork : ${(err as Error).message}`);
+            });
 
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ success: true, module: 'helloWork', quota: effectiveQuota }));
@@ -576,9 +682,20 @@ const server = http.createServer(async (req, res) => {
         if (moduleType === 'easyApply') {
           const effectiveQuota = customQuota || CONFIG.quotas.maxEasyApplyPerSession;
           broadcastLog('system', `Lancement du module EASY APPLY (Quota actif : ${effectiveQuota} candidatures max)`);
-          new EasyApplyModule(undefined, { maxApply: effectiveQuota, ...payload.options }).run().catch((err) => {
-            broadcastLog('error', `Erreur Easy Apply : ${(err as Error).message}`);
-          });
+          new EasyApplyModule(undefined, { maxApply: effectiveQuota, ...payload.options })
+            .run()
+            .then(() => {
+              const pending = CandidateQuestionsManager.getPendingQuestions();
+              if (pending.length > 0) {
+                broadcastLog(
+                  'system',
+                  `📋 Tour Easy Apply terminé : ${pending.length} question(s) à préciser dans l'onglet "Questions Candidat" ou dans QUESTIONS_A_REMPLIR.md.`
+                );
+              }
+            })
+            .catch((err) => {
+              broadcastLog('error', `Erreur Easy Apply : ${(err as Error).message}`);
+            });
         } else if (moduleType === 'networking') {
           broadcastLog('system', `Lancement du module : NETWORKING`);
           const netHelper = new NetworkingModule(undefined, {

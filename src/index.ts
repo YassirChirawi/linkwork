@@ -7,6 +7,8 @@ import { NetworkingModule } from './modules/networking.js';
 import { OutreachModule } from './modules/outreach.js';
 import { colors, log, promptUser } from './utils/cli.js';
 
+import { CandidateQuestionsManager } from './utils/questionsManager.js';
+
 /**
  * Affiche la bannière d'accueil de l'orchestrateur
  */
@@ -21,6 +23,7 @@ function displayBanner(): void {
 
   const hasSession = fs.existsSync(CONFIG.sessionStoragePath);
   const hasResume = fs.existsSync(path.resolve(CONFIG.candidate.resumePath));
+  const pendingQuestions = CandidateQuestionsManager.getPendingQuestions();
 
   console.log(`${colors.bold}Statut de l'environnement :${colors.reset}`);
   console.log(
@@ -42,6 +45,13 @@ function displayBanner(): void {
       CONFIG.headless ? `${colors.yellow}Headless (Arrière-plan)${colors.reset}` : `${colors.green}Visible (Surveillance humaine)${colors.reset}`
     }`
   );
+  console.log(
+    `  • Questions en attente : ${
+      pendingQuestions.length > 0
+        ? `${colors.yellow}⚠ ${pendingQuestions.length} question(s) à préciser (QUESTIONS_A_REMPLIR.md)${colors.reset}`
+        : `${colors.green}✔ Toutes les compétences sont précisées${colors.reset}`
+    }`
+  );
   console.log(`  • Quotas par session   : Easy Apply = ${CONFIG.quotas.maxEasyApplyPerSession} | Réseau = ${CONFIG.quotas.maxNetworkingPerSession} | SaaS = ${CONFIG.quotas.maxOutreachPerSession}\n`);
 }
 
@@ -49,6 +59,9 @@ function displayBanner(): void {
  * Menu principal interactif
  */
 async function main(): Promise<void> {
+  // Synchronisation des réponses modifiées dans le markdown QUESTIONS_A_REMPLIR.md
+  CandidateQuestionsManager.syncFromFile();
+
   while (true) {
     displayBanner();
 
@@ -57,10 +70,11 @@ async function main(): Promise<void> {
     console.log(`  ${colors.green}[2]${colors.reset} 📝 Lancer le Module Candidatures (Easy Apply Semi-Auto)`);
     console.log(`  ${colors.blue}[3]${colors.reset} 🤝 Lancer le Module Réseautage (Job Hunting & Invitations ciblées)`);
     console.log(`  ${colors.magenta}[4]${colors.reset} 🚀 Lancer le Module Prospection & Visibilité SaaS (BayIIn)`);
-    console.log(`  ${colors.yellow}[5]${colors.reset} ⚙️  Consulter les paramètres et profil candidat`);
-    console.log(`  ${colors.red}[6]${colors.reset} 🚪 Quitter`);
+    console.log(`  ${colors.yellow}[5]${colors.reset} 📋 Questions Candidat & Précision du Bot (QUESTIONS_A_REMPLIR.md)`);
+    console.log(`  ${colors.dim}[6]${colors.reset} ⚙️  Consulter les paramètres et profil candidat`);
+    console.log(`  ${colors.red}[7]${colors.reset} 🚪 Quitter`);
 
-    const choice = await promptUser('\nEntrez votre choix (1-6) :');
+    const choice = await promptUser('\nEntrez votre choix (1-7) :');
 
     switch (choice) {
       case '1':
@@ -76,6 +90,7 @@ async function main(): Promise<void> {
         }
         const easyApply = new EasyApplyModule();
         await easyApply.run();
+        await CandidateQuestionsManager.promptCandidateQuestionsCli();
         await promptUser('\nSession terminée. Appuyez sur ENTRÉE pour revenir au menu...');
         break;
       }
@@ -104,20 +119,27 @@ async function main(): Promise<void> {
         break;
       }
 
-      case '5':
+      case '5': {
+        CandidateQuestionsManager.syncFromFile();
+        await CandidateQuestionsManager.promptCandidateQuestionsCli();
+        await promptUser('\nAppuyez sur ENTRÉE pour revenir au menu...');
+        break;
+      }
+
+      case '6':
         console.log('\n--- Configuration Actuelle ---');
         console.log(JSON.stringify(CONFIG, null, 2));
         await promptUser('\nAppuyez sur ENTRÉE pour revenir au menu...');
         break;
 
-      case '6':
+      case '7':
       case 'q':
       case 'exit':
         log.info('Au revoir !');
         process.exit(0);
 
       default:
-        log.error('Choix invalide. Veuillez saisir un nombre entre 1 et 6.');
+        log.error('Choix invalide. Veuillez saisir un nombre entre 1 et 7.');
         await promptUser('\nAppuyez sur ENTRÉE pour continuer...');
         break;
     }

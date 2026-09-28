@@ -48,6 +48,11 @@
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
         <span>Historique d'Actions</span>
       </button>
+      <button class="nav-item" id="nav-questions" data-tab="questions">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>Questions Candidat</span>
+        <span class="badge-count" id="nav-questions-badge" style="display:none; margin-left: auto; background: var(--color-amber); color: #000; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 10px;">0</span>
+      </button>
       <button class="nav-item" id="nav-logs" data-tab="logs">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
         <span>Console Live</span>
@@ -126,6 +131,24 @@
             <span>Simulation biométrique activée</span>
           </div>
         </div>
+      </div>
+
+      <!-- Alerte Questions Candidat en attente après un tour -->
+      <div class="pending-questions-alert" id="dashboard-questions-alert" style="display: none; margin-bottom: 24px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(239, 68, 68, 0.08)); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: var(--radius-lg); padding: 18px 24px; align-items: center; justify-content: space-between; gap: 20px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <div style="font-size: 28px;">📋</div>
+          <div>
+            <h3 style="font-size: 16px; font-weight: 700; color: var(--color-amber); margin-bottom: 4px;">
+              Questions du dernier tour à préciser avant la prochaine session
+            </h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+              Le bot a appliqué la règle par défaut (3 ans) sur <strong id="alert-pending-count" style="color: #fff;">0</strong> question(s). Précisez vos vraies réponses pour une précision optimale.
+            </p>
+          </div>
+        </div>
+        <button class="btn-action primary" style="white-space: nowrap; background: linear-gradient(135deg, var(--color-amber), #d97706); color: #000; font-weight: 700;" onclick="switchTab('questions')">
+          Compléter mes réponses ➔
+        </button>
       </div>
 
       <!-- Statistiques / KPIs -->
@@ -1099,6 +1122,77 @@
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB QUESTIONS : SUITE DE QUESTIONS CANDIDAT -->
+    <section class="tab-pane" id="pane-questions">
+      <div class="panel">
+        <div class="panel-header" style="flex-wrap: wrap; gap: 16px;">
+          <div>
+            <h3>📋 Questions Candidat & Précision des Candidatures</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">
+              Questions posées lors des formulaires de candidatures (LinkedIn & HelloWork).<br>
+              <strong>Règle active :</strong> Les questions d'années d'expérience sont répondues via vos compétences ou fixées à <strong>3 ans par défaut</strong>.
+              Ajustez vos réponses pour le prochain tour.
+            </p>
+          </div>
+          <div class="panel-actions" style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn-action secondary small" onclick="syncQuestionsFromFile()">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Sync Markdown (QUESTIONS_A_REMPLIR.md)
+            </button>
+            <button class="btn-action primary small" onclick="saveAllCandidateAnswers()" style="background: linear-gradient(135deg, var(--color-cyan), var(--color-purple)); color: #fff; font-weight: 700;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Enregistrer pour la prochaine session
+            </button>
+          </div>
+        </div>
+
+        <!-- Résumé métriques -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 20px;">
+          <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px 18px;">
+            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.5px;">Questions à préciser</span>
+            <div id="questions-stat-pending" style="font-size: 22px; font-weight: 700; color: var(--color-amber); margin-top: 4px;">0</div>
+          </div>
+          <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px 18px;">
+            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.5px;">Règle par défaut</span>
+            <div style="font-size: 15px; font-weight: 700; color: var(--color-cyan); margin-top: 6px;">3 ans si compétence inconnue</div>
+          </div>
+          <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 14px 18px;">
+            <span style="font-size: 11px; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.5px;">Fichier éditable</span>
+            <div style="font-size: 13px; font-weight: 600; color: var(--text-main); margin-top: 6px; font-family: var(--font-mono);">QUESTIONS_A_REMPLIR.md</div>
+          </div>
+        </div>
+
+        <!-- Section 1 : Questions d'expérience par compétence -->
+        <div style="margin-top: 32px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+            <h4 style="font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+              <span>⏳</span> Compétences & Années d'Expérience (Questions "Combien d'années...")
+            </h4>
+            <span id="questions-skills-count" style="font-size: 12px; color: var(--text-muted);">0 compétence(s)</span>
+          </div>
+          <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+            Lorsqu'une offre demande par exemple <em>"Combien d'années d'expérience avez-vous avec Angular ?"</em>, le bot recherche dans vos compétences. S'il ne trouve pas, il renseigne <strong>3 ans</strong> par défaut pour passer le filtre recruteur. Ajustez la vraie valeur ci-dessous pour les prochains tours.
+          </p>
+          <div id="questions-skills-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;">
+            <!-- Rendu dynamique JS -->
+          </div>
+        </div>
+
+        <!-- Section 2 : Questions Spécifiques / Oui-Non / Recruteurs -->
+        <div style="margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--border-subtle);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+            <h4 style="font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+              <span>❓</span> Questions Spécifiques & Préférences Recruteurs (Oui / Non, Textes)
+            </h4>
+            <span id="questions-other-count" style="font-size: 12px; color: var(--text-muted);">0 question(s)</span>
+          </div>
+          <div id="questions-other-container" style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- Rendu dynamique JS -->
+          </div>
         </div>
       </div>
     </section>

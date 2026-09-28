@@ -2402,6 +2402,171 @@ body {
   display: block;
 }
 
+/* ==================== QUESTIONS CANDIDAT STYLES ==================== */
+.question-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.25s ease;
+  position: relative;
+}
+
+.question-card:hover {
+  border-color: rgba(6, 182, 212, 0.4);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  transform: translateY(-2px);
+}
+
+.question-card.pending {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.04) 0%, rgba(17, 24, 39, 0.75) 100%);
+}
+
+.question-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.question-skill-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.question-quote {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.4;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border-left: 2px solid var(--color-cyan);
+}
+
+.question-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.stepper-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stepper-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.stepper-btn:hover {
+  background: rgba(6, 182, 212, 0.2);
+  color: var(--color-cyan);
+  border-color: rgba(6, 182, 212, 0.4);
+}
+
+.stepper-input {
+  width: 58px;
+  height: 32px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-cyan);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  font-family: var(--font-mono);
+}
+
+.preset-pills-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.preset-pill {
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.preset-pill:hover {
+  background: rgba(6, 182, 212, 0.15);
+  color: var(--color-cyan);
+  border-color: rgba(6, 182, 212, 0.3);
+}
+
+.boolean-toggle-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.boolean-toggle-btn {
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.boolean-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+}
+
+.boolean-toggle-btn.active-yes {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: var(--color-emerald);
+  color: var(--color-emerald);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+}
+
+.boolean-toggle-btn.active-no {
+  background: rgba(244, 63, 94, 0.2);
+  border-color: var(--color-rose);
+  color: var(--color-rose);
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.2);
+}
+
+
 
 
 

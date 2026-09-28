@@ -26,6 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initSSE();
   initBayIInStudio();
   loadCVProfile();
+  loadCandidateQuestions();
 
   // Actualisation périodique du statut
   setInterval(refreshStatus, 10000);
@@ -50,6 +51,8 @@ function initTabs() {
         loadActionHistory();
       } else if (targetTab === 'cv-matcher') {
         loadCVProfile();
+      } else if (targetTab === 'questions') {
+        loadCandidateQuestions();
       }
     });
   });
@@ -234,6 +237,14 @@ function initSSE() {
         updateSimulationDisplay(data);
       } catch (err) {
         console.warn("Erreur parsing simulation_progress :", err);
+      }
+    });
+
+    eventSource.addEventListener('questions_updated', (event) => {
+      try {
+        loadCandidateQuestions();
+      } catch (err) {
+        console.warn("Erreur parsing questions_updated :", err);
       }
     });
 
@@ -1734,6 +1745,247 @@ function switchCVSubtab(subtabName) {
   });
 }
 
+// ==================== GESTION DES QUESTIONS CANDIDAT ====================
+let candidateQuestions = [];
+
+function switchTab(tabName) {
+  const btn = document.querySelector(`.nav-item[data-tab="${tabName}"]`);
+  if (btn) btn.click();
+}
+
+async function loadCandidateQuestions() {
+  try {
+    const res = await fetch('/api/questions');
+    if (!res.ok) return;
+    const data = await res.json();
+    candidateQuestions = data.all || [];
+
+    // 1. Badge de navigation
+    const navBadge = document.getElementById('nav-questions-badge');
+    if (navBadge) {
+      if (data.pendingCount > 0) {
+        navBadge.innerText = data.pendingCount;
+        navBadge.style.display = 'inline-block';
+      } else {
+        navBadge.style.display = 'none';
+      }
+    }
+
+    // 2. Alerte sur la page d'accueil (Dashboard)
+    const alertBox = document.getElementById('dashboard-questions-alert');
+    const alertCount = document.getElementById('alert-pending-count');
+    if (alertBox) {
+      if (data.pendingCount > 0) {
+        alertBox.style.display = 'flex';
+        if (alertCount) alertCount.innerText = data.pendingCount;
+      } else {
+        alertBox.style.display = 'none';
+      }
+    }
+
+    // 3. Compteurs statistiques
+    const statPending = document.getElementById('questions-stat-pending');
+    if (statPending) statPending.innerText = data.pendingCount || 0;
+
+    // 4. Rendu de la section Compétences (Années d'expérience)
+    renderQuestionsSkills(candidateQuestions.filter(q => q.category === 'years_skill'));
+
+    // 5. Rendu de la section Autres Questions (Oui/Non, etc.)
+    renderQuestionsOther(candidateQuestions.filter(q => q.category !== 'years_skill'));
+  } catch (err) {
+    console.warn("Erreur chargement questions candidat :", err);
+  }
+}
+
+function renderQuestionsSkills(questions) {
+  const container = document.getElementById('questions-skills-container');
+  const countEl = document.getElementById('questions-skills-count');
+  if (!container) return;
+
+  if (countEl) countEl.innerText = `${questions.length} compétence${questions.length > 1 ? 's' : ''}`;
+
+  if (questions.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; color: var(--text-dim); padding: 32px; background: rgba(255,255,255,0.01); border-radius: 8px; border: 1px dashed var(--border-subtle);">
+        <div style="font-size: 24px; margin-bottom: 8px;">✨</div>
+        <strong style="color: var(--text-main);">Toutes vos compétences sont calibrées avec précision !</strong>
+        <p style="font-size: 13px; margin-top: 4px;">Dès qu'une question sur une compétence non répertoriée sera posée lors d'un tour, elle apparaîtra ici avec la valeur 3 ans par défaut afin que vous puissiez la préciser.</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = questions.map(q => {
+    const isPending = !q.isAnswered;
+    const currentVal = q.candidateAnswer || q.botAnswer || '3';
+    const skillDisplay = escapeHtml((q.skillName || 'Compétence').toUpperCase());
+    const badgeText = q.isAnswered ? '✔ Validé candidat' : (q.fallbackApplied ? '⚠ Par défaut : 3 ans' : `${q.botAnswer} ans appliqué`);
+    const badgeStyle = q.isAnswered 
+      ? 'background: rgba(16, 185, 129, 0.15); color: var(--color-emerald); border: 1px solid rgba(16, 185, 129, 0.3);'
+      : (q.fallbackApplied 
+        ? 'background: rgba(245, 158, 11, 0.15); color: var(--color-amber); border: 1px solid rgba(245, 158, 11, 0.3);' 
+        : 'background: rgba(6, 182, 212, 0.15); color: var(--color-cyan); border: 1px solid rgba(6, 182, 212, 0.3);');
+
+    return `
+      <div class="question-card ${isPending ? 'pending' : ''}" id="card-${q.id}">
+        <div class="question-card-header">
+          <span class="question-skill-title">
+            <span style="color: var(--color-cyan);">⚡</span> ${skillDisplay}
+          </span>
+          <span style="font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; ${badgeStyle}">
+            ${badgeText}
+          </span>
+        </div>
+        <div class="question-quote">
+          "${escapeHtml(q.questionText)}"
+        </div>
+        <div class="question-controls">
+          <div class="stepper-control">
+            <button type="button" class="stepper-btn" onclick="changeQuestionExp('${q.id}', -1)" title="Diminuer">-</button>
+            <input type="number" id="input-${q.id}" class="stepper-input" min="0" max="25" value="${currentVal}">
+            <button type="button" class="stepper-btn" onclick="changeQuestionExp('${q.id}', 1)" title="Augmenter">+</button>
+            <span style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-left: 2px;">an(s)</span>
+          </div>
+          <div class="preset-pills-row">
+            <button type="button" class="preset-pill" onclick="setQuestionExp('${q.id}', 1)">1 an</button>
+            <button type="button" class="preset-pill" onclick="setQuestionExp('${q.id}', 2)">2 ans</button>
+            <button type="button" class="preset-pill" onclick="setQuestionExp('${q.id}', 3)">3 ans</button>
+            <button type="button" class="preset-pill" onclick="setQuestionExp('${q.id}', 4)">4 ans</button>
+            <button type="button" class="preset-pill" onclick="setQuestionExp('${q.id}', 5)">5 ans</button>
+            <button type="button" class="preset-pill" onclick="setQuestionExp('${q.id}', 8)">8 ans</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderQuestionsOther(questions) {
+  const container = document.getElementById('questions-other-container');
+  const countEl = document.getElementById('questions-other-count');
+  if (!container) return;
+
+  if (countEl) countEl.innerText = `${questions.length} question${questions.length > 1 ? 's' : ''}`;
+
+  if (questions.length === 0) {
+    container.innerHTML = `
+      <div style="text-align: center; color: var(--text-dim); padding: 24px; background: rgba(255,255,255,0.01); border-radius: 8px; border: 1px dashed var(--border-subtle);">
+        <p style="font-size: 13px; margin: 0;">Aucune question spécifique supplémentaire posée pour l'instant.</p>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = questions.map(q => {
+    const isPending = !q.isAnswered;
+    const currentVal = q.candidateAnswer || q.botAnswer || 'Oui';
+    const isBool = q.category === 'boolean' || /^(oui|non|yes|no)$/i.test(currentVal);
+    const isYes = /^(oui|yes|true)$/i.test(currentVal);
+
+    return `
+      <div class="question-card ${isPending ? 'pending' : ''}" id="card-${q.id}" style="flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
+        <div style="flex: 1; min-width: 250px;">
+          <strong style="font-size: 14px; color: #fff;">${escapeHtml(q.questionText)}</strong>
+          <div style="font-size: 12px; color: var(--text-muted); margin-top: 3px;">
+            Réponse temporaire du bot : <span style="color: var(--color-cyan); font-weight: 600;">"${escapeHtml(q.botAnswer)}"</span>
+            ${q.isAnswered ? '<span style="color: var(--color-emerald); font-weight: 600; margin-left: 8px;">✔ Confirmé</span>' : ''}
+          </div>
+        </div>
+        <div>
+          ${isBool ? `
+            <div class="boolean-toggle-group">
+              <input type="hidden" id="input-${q.id}" value="${isYes ? 'Oui' : 'Non'}">
+              <button type="button" class="boolean-toggle-btn ${isYes ? 'active-yes' : ''}" id="btn-yes-${q.id}" onclick="toggleQuestionBoolean('${q.id}', 'Oui')">Oui</button>
+              <button type="button" class="boolean-toggle-btn ${!isYes ? 'active-no' : ''}" id="btn-no-${q.id}" onclick="toggleQuestionBoolean('${q.id}', 'Non')">Non</button>
+            </div>
+          ` : `
+            <input type="text" id="input-${q.id}" value="${escapeHtml(currentVal)}" style="padding: 6px 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); border-radius: 6px; color: #fff; width: 220px;">
+          `}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function changeQuestionExp(id, delta) {
+  const el = document.getElementById(`input-${id}`);
+  if (!el) return;
+  const val = Math.max(0, Math.min(25, (parseInt(el.value, 10) || 0) + delta));
+  el.value = val;
+}
+
+function setQuestionExp(id, val) {
+  const el = document.getElementById(`input-${id}`);
+  if (el) el.value = val;
+}
+
+function toggleQuestionBoolean(id, choice) {
+  const hiddenInput = document.getElementById(`input-${id}`);
+  const yesBtn = document.getElementById(`btn-yes-${id}`);
+  const noBtn = document.getElementById(`btn-no-${id}`);
+  if (hiddenInput) hiddenInput.value = choice;
+  if (choice === 'Oui') {
+    if (yesBtn) yesBtn.className = 'boolean-toggle-btn active-yes';
+    if (noBtn) noBtn.className = 'boolean-toggle-btn';
+  } else {
+    if (yesBtn) yesBtn.className = 'boolean-toggle-btn';
+    if (noBtn) noBtn.className = 'boolean-toggle-btn active-no';
+  }
+}
+
+async function saveAllCandidateAnswers() {
+  const answers = {};
+  candidateQuestions.forEach(q => {
+    const input = document.getElementById(`input-${q.id}`);
+    if (input) {
+      answers[q.id] = input.value.trim();
+    }
+  });
+
+  if (Object.keys(answers).length === 0) {
+    alert("Aucune réponse à enregistrer.");
+    return;
+  }
+
+  appendLog("Enregistrement de vos réponses candidat en cours...", "system");
+
+  try {
+    const res = await fetch('/api/questions/answer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ answers }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Erreur de sauvegarde");
+
+    appendLog(`✔ Vos réponses ont été enregistrées ! La matrice de compétences et QUESTIONS_A_REMPLIR.md ont été synchronisés.`, "success");
+    alert("Vos réponses ont été enregistrées avec succès ! Le bot les appliquera automatiquement lors des prochains tours.");
+    await loadCandidateQuestions();
+    await loadRemoteConfig();
+    renderSkills();
+  } catch (err) {
+    appendLog("Erreur enregistrement réponses : " + err.message, "error");
+    alert("Erreur lors de l'enregistrement : " + err.message);
+  }
+}
+
+async function syncQuestionsFromFile() {
+  appendLog("Synchronisation depuis QUESTIONS_A_REMPLIR.md...", "system");
+  try {
+    const res = await fetch('/api/questions/sync-file', { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Erreur sync");
+
+    appendLog(`✔ Synchronisation Markdown terminée : ${data.updatedCount} réponse(s) importée(s).`, "success");
+    alert(`Synchronisation terminée : ${data.updatedCount} réponse(s) synchronisée(s) depuis QUESTIONS_A_REMPLIR.md !`);
+    await loadCandidateQuestions();
+    await loadRemoteConfig();
+    renderSkills();
+  } catch (err) {
+    appendLog("Erreur synchronisation fichier : " + err.message, "error");
+    alert("Erreur lors de la synchronisation : " + err.message);
+  }
+}
+
 // Exposer globalement sur window
 window.triggerExtractCV = triggerExtractCV;
 window.handleCVUpload = handleCVUpload;
@@ -1748,6 +2000,13 @@ window.copyBooleanQuery = copyBooleanQuery;
 window.triggerDirectApply = triggerDirectApply;
 window.switchCVSubtab = switchCVSubtab;
 window.updateQuickQuota = updateQuickQuota;
+window.switchTab = switchTab;
+window.loadCandidateQuestions = loadCandidateQuestions;
+window.saveAllCandidateAnswers = saveAllCandidateAnswers;
+window.syncQuestionsFromFile = syncQuestionsFromFile;
+window.changeQuestionExp = changeQuestionExp;
+window.setQuestionExp = setQuestionExp;
+window.toggleQuestionBoolean = toggleQuestionBoolean;
 
 // Raccourci Lancer Campagne du Header
 document.addEventListener('DOMContentLoaded', () => {
@@ -1756,5 +2015,6 @@ document.addEventListener('DOMContentLoaded', () => {
     quickRunBtn.onclick = () => triggerRun('easyApply');
   }
 });
+
 
 
